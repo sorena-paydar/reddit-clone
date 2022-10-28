@@ -30,10 +30,7 @@ export class AuthService {
         },
       });
 
-      delete user.id;
-      delete user.password;
-
-      return user;
+      return this.createJWTToken(user.id, user.email);
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
