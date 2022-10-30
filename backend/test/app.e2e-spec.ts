@@ -9,6 +9,9 @@ describe('App (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
 
+  let authDto: RegisterDto;
+  let access_token: string;
+
   beforeAll(async () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -38,7 +41,7 @@ describe('App (e2e)', () => {
   });
 
   describe('Auth', () => {
-    const registerDto: RegisterDto = {
+    authDto = {
       email: 'sorena@gmail.com',
       username: 'sorena',
       password: 'strongpassword',
@@ -48,7 +51,7 @@ describe('App (e2e)', () => {
       it('create new user', (done) => {
         request(app.getHttpServer())
           .post('/auth/register')
-          .send(registerDto)
+          .send(authDto)
           .expect(HttpStatus.CREATED)
           .end((err, res) => {
             if (err) return done(err);
@@ -72,7 +75,7 @@ describe('App (e2e)', () => {
       it('throw exception if credentials taken', (done) => {
         request(app.getHttpServer())
           .post('/auth/register')
-          .send(registerDto)
+          .send(authDto)
           .expect(HttpStatus.FORBIDDEN)
           .end((err, res) => {
             if (err) return done(err);
@@ -84,8 +87,8 @@ describe('App (e2e)', () => {
 
     describe('Login', () => {
       const loginDto: LoginDto = {
-        email: registerDto.email,
-        password: registerDto.password,
+        email: authDto.email,
+        password: authDto.password,
       };
 
       it('login to the created user', (done) => {
@@ -95,6 +98,8 @@ describe('App (e2e)', () => {
           .expect(HttpStatus.OK)
           .end((err, res) => {
             if (err) return done(err);
+
+            access_token = res.body['access_token'];
 
             return done();
           });
@@ -126,6 +131,49 @@ describe('App (e2e)', () => {
             return done();
           });
       });
+    });
+  });
+
+  describe('User', () => {
+    it('get user info', (done) => {
+      request(app.getHttpServer())
+        .get('/users/me')
+        .set({ Authorization: 'Bearer ' + access_token })
+        .expect(HttpStatus.OK)
+        .expect(function (res) {
+          res.body.email = authDto.email;
+          res.body.username = authDto.username;
+        })
+        .end((err, res) => {
+          if (err) return done(err);
+
+          return done();
+        });
+    });
+
+    it('throw exception if token not provided', (done) => {
+      request(app.getHttpServer())
+        .get('/users/me')
+        .expect(HttpStatus.UNAUTHORIZED)
+        .end((err, res) => {
+          if (err) return done(err);
+
+          console.log(res);
+
+          return done();
+        });
+    });
+
+    it('throw exception if token not valid', (done) => {
+      request(app.getHttpServer())
+        .get('/users/me')
+        .set({ Authorization: 'Bearer ' + 'aksdjaljdklsd' })
+        .expect(HttpStatus.UNAUTHORIZED)
+        .end((err, res) => {
+          if (err) return done(err);
+
+          return done();
+        });
     });
   });
 });
