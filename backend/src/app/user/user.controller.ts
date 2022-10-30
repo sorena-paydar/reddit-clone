@@ -4,9 +4,9 @@ import { getUser } from '../auth/decorator';
 import { JwtGuard } from '../auth/guard/jwt.guard';
 
 @UseGuards(JwtGuard)
-@Controller('users')
+@Controller('user')
 export class UserController {
-  @Get('me')
+  @Get(':username')
   me(@getUser() user: User): User {
     return user;
   }

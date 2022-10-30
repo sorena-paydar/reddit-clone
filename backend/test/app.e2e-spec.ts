@@ -137,7 +137,7 @@ describe('App (e2e)', () => {
   describe('User', () => {
     it('get user info', (done) => {
       request(app.getHttpServer())
-        .get('/users/me')
+        .get(`/user/${authDto.username}`)
         .set({ Authorization: 'Bearer ' + access_token })
         .expect(HttpStatus.OK)
         .expect(function (res) {
@@ -153,7 +153,7 @@ describe('App (e2e)', () => {
 
     it('throw exception if token not provided', (done) => {
       request(app.getHttpServer())
-        .get('/users/me')
+        .get(`/user/${authDto.username}`)
         .expect(HttpStatus.UNAUTHORIZED)
         .end((err, res) => {
           if (err) return done(err);
@@ -166,7 +166,7 @@ describe('App (e2e)', () => {
 
     it('throw exception if token not valid', (done) => {
       request(app.getHttpServer())
-        .get('/users/me')
+        .get(`/user/${authDto.username}`)
         .set({ Authorization: 'Bearer ' + 'aksdjaljdklsd' })
         .expect(HttpStatus.UNAUTHORIZED)
         .end((err, res) => {
