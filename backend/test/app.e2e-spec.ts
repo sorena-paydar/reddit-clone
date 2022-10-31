@@ -135,20 +135,14 @@ describe('App (e2e)', () => {
   });
 
   describe('User', () => {
-    it('get user info', (done) => {
-      request(app.getHttpServer())
+    it('get user info', async () => {
+      const response = await request(app.getHttpServer())
         .get(`/user/${authDto.username}`)
-        .set({ Authorization: 'Bearer ' + access_token })
-        .expect(HttpStatus.OK)
-        .expect(function (res) {
-          res.body.email = authDto.email;
-          res.body.username = authDto.username;
-        })
-        .end((err, res) => {
-          if (err) return done(err);
+        .set({ Authorization: 'Bearer ' + access_token });
 
-          return done();
-        });
+      expect(response.status).toEqual(HttpStatus.OK);
+      expect(response.body.email).toEqual(authDto.email);
+      expect(response.body.username).toEqual(authDto.username);
     });
 
     it('throw exception if token not provided', (done) => {
@@ -174,6 +168,42 @@ describe('App (e2e)', () => {
 
           return done();
         });
+    });
+
+    it("thow exception if username in query param doesn't match with username of requested user", async () => {
+      const response = await request(app.getHttpServer())
+        .get(`/user/wrong-username`)
+        .set({ Authorization: 'Bearer ' + access_token });
+
+      expect(response.statusCode).toEqual(HttpStatus.NOT_FOUND);
+    });
+
+    it('update user', async () => {
+      const updateUserDto = {
+        username: 'sorena-paydar',
+        displayName: 's0rena',
+        bio: 'software developer',
+        gender: 'Male',
+      };
+
+      const response = await request(app.getHttpServer())
+        .patch(`/user/${authDto.username}`)
+        .set({ Authorization: 'Bearer ' + access_token })
+        .send(updateUserDto);
+
+      expect(response.status).toEqual(HttpStatus.OK);
+      expect(response.body.username).toEqual(updateUserDto.username);
+      expect(response.body.displayName).toEqual(updateUserDto.displayName);
+      expect(response.body.bio).toEqual(updateUserDto.bio);
+      expect(response.body.gender).toEqual(updateUserDto.gender);
+    });
+
+    it('username (query param) check for user patch', async () => {
+      const response = await request(app.getHttpServer())
+        .patch(`/user/wrong-username`)
+        .set({ Authorization: 'Bearer ' + access_token });
+
+      expect(response.status).toEqual(HttpStatus.NOT_FOUND);
     });
   });
 });
