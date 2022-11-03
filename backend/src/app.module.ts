@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { AuthModule, PrismaModule, UserModule } from './app';
+import { AuthModule, PrismaModule, UserModule, SubredditModule } from './app';
 
 @Module({
   imports: [
@@ -8,6 +8,7 @@ import { AuthModule, PrismaModule, UserModule } from './app';
     AuthModule,
     PrismaModule,
     UserModule,
+    SubredditModule,
   ],
   controllers: [],
   providers: [],
