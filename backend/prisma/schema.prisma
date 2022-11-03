@@ -18,33 +18,17 @@ enum Gender {
 }
 
 model User {
-  id            String      @id @default(uuid())
-  email         String
-  username      String
+  id            String   @id @unique @default(uuid())
+  email         String   @unique
+  username      String   @unique
   password      String
-  displayName   String?     @map("display_name") @db.VarChar(30)
-  bio           String?     @db.VarChar(200)
-  gender        Gender      @default(Unknown)
+  displayName   String?  @map("display_name") @db.VarChar(30)
+  bio           String?  @db.VarChar(200)
+  gender        Gender   @default(Unknown)
   avatar        String?
-  emailVerified Boolean     @default(false) @map("email_verified")
-  createdAt     DateTime    @default(now()) @map("created_at")
-  updatedAt     DateTime    @updatedAt @map("updated_at")
-  Subreddit     Subreddit[]
+  emailVerified Boolean  @default(false) @map("email_verified")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
-  @@unique([id, email, username])
   @@map("users")
-}
-
-model Subreddit {
-  id        String   @id @default(uuid())
-  name      String   @db.VarChar(30)
-  bio       String?  @db.VarChar(400)
-  avatar    String?
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String   @map("user_id")
-
-  @@unique([id, name])
-  @@map("subreddits")
 }
