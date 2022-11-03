@@ -22,7 +22,7 @@ CREATE TABLE "users" (
 CREATE TABLE "subreddits" (
     "id" TEXT NOT NULL,
     "name" VARCHAR(30) NOT NULL,
-    "bio" VARCHAR(400),
+    "description" VARCHAR(400),
     "avatar" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
