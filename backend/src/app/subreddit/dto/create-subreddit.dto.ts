@@ -6,7 +6,7 @@ export class CreateSubredditDto {
 
   @IsString()
   @IsOptional()
-  bio?: string;
+  description?: string;
 
   @IsString()
   @IsOptional()

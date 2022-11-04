@@ -7,7 +7,7 @@ export class UpdateSubredditDto {
 
   @IsString()
   @IsOptional()
-  bio?: string;
+  description?: string;
 
   @IsString()
   @IsOptional()
