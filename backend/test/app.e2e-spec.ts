@@ -4,6 +4,10 @@ import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/app/prisma/prisma.service';
 import { LoginDto, RegisterDto } from '../src/app/auth/dto';
+import {
+  CreateSubredditDto,
+  UpdateSubredditDto,
+} from '../src/app/subreddit/dto';
 
 describe('App (e2e)', () => {
   let app: INestApplication;
@@ -11,6 +15,8 @@ describe('App (e2e)', () => {
 
   let authDto: RegisterDto;
   let access_token: string;
+  let user_id: string;
+  let subreddit_id: string;
 
   beforeAll(async () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
@@ -135,75 +141,263 @@ describe('App (e2e)', () => {
   });
 
   describe('User', () => {
-    it('get user info', async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/user/${authDto.username}`)
-        .set({ Authorization: 'Bearer ' + access_token });
+    describe('Me', () => {
+      it('get user info', async () => {
+        const response = await request(app.getHttpServer())
+          .get(`/user/${authDto.username}`)
+          .set({ Authorization: 'Bearer ' + access_token });
 
-      expect(response.status).toEqual(HttpStatus.OK);
-      expect(response.body.email).toEqual(authDto.email);
-      expect(response.body.username).toEqual(authDto.username);
+        expect(response.status).toEqual(HttpStatus.OK);
+        expect(response.body.email).toEqual(authDto.email);
+        expect(response.body.username).toEqual(authDto.username);
+
+        user_id = response.body.id;
+      });
+
+      it('throw exception if token not provided', (done) => {
+        request(app.getHttpServer())
+          .get(`/user/${authDto.username}`)
+          .expect(HttpStatus.UNAUTHORIZED)
+          .end((err, res) => {
+            if (err) return done(err);
+
+            console.log(res);
+
+            return done();
+          });
+      });
+
+      it('throw exception if token not valid', (done) => {
+        request(app.getHttpServer())
+          .get(`/user/${authDto.username}`)
+          .set({ Authorization: 'Bearer ' + 'aksdjaljdklsd' })
+          .expect(HttpStatus.UNAUTHORIZED)
+          .end((err, res) => {
+            if (err) return done(err);
+
+            return done();
+          });
+      });
+
+      it("thow exception if username in query param doesn't match with username of requested user", async () => {
+        const response = await request(app.getHttpServer())
+          .get(`/user/wrong-username`)
+          .set({ Authorization: 'Bearer ' + access_token });
+
+        expect(response.statusCode).toEqual(HttpStatus.NOT_FOUND);
+      });
     });
 
-    it('throw exception if token not provided', (done) => {
-      request(app.getHttpServer())
-        .get(`/user/${authDto.username}`)
-        .expect(HttpStatus.UNAUTHORIZED)
-        .end((err, res) => {
-          if (err) return done(err);
+    describe('Subreddits', () => {
+      it('get all subreddits owned by user', async () => {
+        const response = await request(app.getHttpServer())
+          .get(`/user/${authDto.username}/subreddits`)
+          .set({ Authorization: 'Bearer ' + access_token });
 
-          console.log(res);
-
-          return done();
-        });
+        expect(response.status).toEqual(HttpStatus.OK);
+        expect(response.body).toEqual([]);
+      });
     });
 
-    it('throw exception if token not valid', (done) => {
-      request(app.getHttpServer())
-        .get(`/user/${authDto.username}`)
-        .set({ Authorization: 'Bearer ' + 'aksdjaljdklsd' })
-        .expect(HttpStatus.UNAUTHORIZED)
-        .end((err, res) => {
-          if (err) return done(err);
+    describe('Update', () => {
+      it('update user', async () => {
+        const updateUserDto = {
+          username: 'sorena-paydar',
+          displayName: 's0rena',
+          bio: 'software developer',
+          gender: 'Male',
+        };
 
-          return done();
-        });
+        const response = await request(app.getHttpServer())
+          .patch(`/user/${authDto.username}`)
+          .set({ Authorization: 'Bearer ' + access_token })
+          .send(updateUserDto);
+
+        expect(response.status).toEqual(HttpStatus.OK);
+        expect(response.body.username).toEqual(updateUserDto.username);
+        expect(response.body.displayName).toEqual(updateUserDto.displayName);
+        expect(response.body.bio).toEqual(updateUserDto.bio);
+        expect(response.body.gender).toEqual(updateUserDto.gender);
+      });
+
+      it('username (query param) check for user patch', async () => {
+        const response = await request(app.getHttpServer())
+          .patch(`/user/wrong-username`)
+          .set({ Authorization: 'Bearer ' + access_token });
+
+        expect(response.status).toEqual(HttpStatus.NOT_FOUND);
+      });
+    });
+  });
+
+  describe('Subreddit', () => {
+    const createSubredditDto: CreateSubredditDto = {
+      name: 'coding',
+      description: 'Welcome to coding',
+    };
+
+    describe('Create', () => {
+      it('create new subreddit', async () => {
+        const response = await request(app.getHttpServer())
+          .post('/r')
+          .set({ Authorization: 'Bearer ' + access_token })
+          .send(createSubredditDto);
+
+        expect(response.status).toEqual(HttpStatus.CREATED);
+      });
+
+      it('create another subreddit', async () => {
+        const response = await request(app.getHttpServer())
+          .post('/r')
+          .set({ Authorization: 'Bearer ' + access_token })
+          .send({
+            ...createSubredditDto,
+            name: 'google',
+          });
+
+        expect(response.status).toEqual(HttpStatus.CREATED);
+      });
+
+      it('throw exception if token not provided', async () => {
+        const response = await request(app.getHttpServer())
+          .post('/r')
+          .send(createSubredditDto);
+
+        expect(response.status).toEqual(HttpStatus.UNAUTHORIZED);
+      });
+
+      it('throw exception if subreddit name taken', async () => {
+        const response = await request(app.getHttpServer())
+          .post('/r')
+          .set({ Authorization: 'Bearer ' + access_token })
+          .send(createSubredditDto);
+
+        expect(response.status).toEqual(HttpStatus.FORBIDDEN);
+      });
+
+      it('throw exception if body not provided', async () => {
+        const response = await request(app.getHttpServer())
+          .post('/r')
+          .set({ Authorization: 'Bearer ' + access_token });
+
+        expect(response.status).toEqual(HttpStatus.BAD_REQUEST);
+      });
     });
 
-    it("thow exception if username in query param doesn't match with username of requested user", async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/user/wrong-username`)
-        .set({ Authorization: 'Bearer ' + access_token });
+    describe('Public', () => {
+      it('get all subreddits', async () => {
+        const response = await await request(app.getHttpServer()).get('/r');
 
-      expect(response.statusCode).toEqual(HttpStatus.NOT_FOUND);
+        expect(response.status).toEqual(HttpStatus.OK);
+      });
+
+      it('get one subreddit', async () => {
+        const response = await await request(app.getHttpServer()).get(
+          `/r/${createSubredditDto.name}`,
+        );
+
+        expect(response.status).toEqual(HttpStatus.OK);
+        expect(response.body.name).toEqual(createSubredditDto.name);
+        expect(response.body.description).toEqual(
+          createSubredditDto.description,
+        );
+        expect(response.body.userId).toEqual(user_id);
+
+        subreddit_id = response.body.id;
+      });
+
+      it("throw exception if subreddit doesn't exist", async () => {
+        const response = await await request(app.getHttpServer()).get(
+          `/r/sports`,
+        );
+
+        expect(response.status).toEqual(HttpStatus.NOT_FOUND);
+      });
     });
 
-    it('update user', async () => {
-      const updateUserDto = {
-        username: 'sorena-paydar',
-        displayName: 's0rena',
-        bio: 'software developer',
-        gender: 'Male',
+    describe('Update', () => {
+      const updateSubredditDto: UpdateSubredditDto = {
+        name: 'hacking',
+        description:
+          'A subreddit dedicated to hacking and hackers. Constructive collaboration and learning about exploits, industry standards, grey and white hat hacking, new hardware and software hacking technology, sharing ideas and suggestions for small business and personal security.',
       };
 
-      const response = await request(app.getHttpServer())
-        .patch(`/user/${authDto.username}`)
-        .set({ Authorization: 'Bearer ' + access_token })
-        .send(updateUserDto);
+      it('edit subreddit if user owns the subreddit', async () => {
+        const response = await request(app.getHttpServer())
+          .patch(`/r/${subreddit_id}`)
+          .set({ Authorization: 'Bearer ' + access_token })
+          .send(updateSubredditDto);
 
-      expect(response.status).toEqual(HttpStatus.OK);
-      expect(response.body.username).toEqual(updateUserDto.username);
-      expect(response.body.displayName).toEqual(updateUserDto.displayName);
-      expect(response.body.bio).toEqual(updateUserDto.bio);
-      expect(response.body.gender).toEqual(updateUserDto.gender);
+        expect(response.status).toEqual(HttpStatus.OK);
+        expect(response.body.name).toEqual(updateSubredditDto.name);
+        expect(response.body.description).toEqual(
+          updateSubredditDto.description,
+        );
+      });
+
+      it("throw exception if user doesn't own the subreddit", async () => {
+        const response = await request(app.getHttpServer())
+          .patch(`/r/${subreddit_id}`)
+          .set({ Authorization: 'Bearer ' + 'asdasdasd' })
+          .send(updateSubredditDto);
+
+        expect(response.status).toEqual(HttpStatus.UNAUTHORIZED);
+      });
+
+      it("throw exception if subreddit doesn't exist", async () => {
+        const response = await request(app.getHttpServer())
+          .patch(`/r/sorena`)
+          .set({ Authorization: 'Bearer ' + access_token })
+          .send(updateSubredditDto);
+
+        expect(response.status).toEqual(HttpStatus.NOT_FOUND);
+      });
+
+      it('throw exception if subreddit name taken', async () => {
+        const response = await request(app.getHttpServer())
+          .patch(`/r/${subreddit_id}`)
+          .set({ Authorization: 'Bearer ' + access_token })
+          .send({
+            ...updateSubredditDto,
+            name: 'google',
+          });
+
+        expect(response.status).toEqual(HttpStatus.FORBIDDEN);
+      });
     });
 
-    it('username (query param) check for user patch', async () => {
-      const response = await request(app.getHttpServer())
-        .patch(`/user/wrong-username`)
-        .set({ Authorization: 'Bearer ' + access_token });
+    describe('Delete', () => {
+      it('delete subreddit if user owns the subreddit', async () => {
+        const response = await request(app.getHttpServer())
+          .delete(`/r/${subreddit_id}`)
+          .set({ Authorization: 'Bearer ' + access_token });
 
-      expect(response.status).toEqual(HttpStatus.NOT_FOUND);
+        expect(response.status).toEqual(HttpStatus.NO_CONTENT);
+      });
+
+      it("throw exception if subreddit doesn't exist", async () => {
+        const response = await request(app.getHttpServer())
+          .delete(`/r/sorena`)
+          .set({ Authorization: 'Bearer ' + access_token });
+
+        expect(response.status).toEqual(HttpStatus.NOT_FOUND);
+      });
+
+      it("throw exception if user doesn't own the subreddit", async () => {
+        const response = await request(app.getHttpServer())
+          .delete(`/r/${subreddit_id}`)
+          .set({ Authorization: 'Bearer ' + 'asdasdasd' });
+
+        expect(response.status).toEqual(HttpStatus.UNAUTHORIZED);
+      });
+
+      it('throw exception if token not provided', async () => {
+        const response = await request(app.getHttpServer()).delete(
+          `/r/${subreddit_id}`,
+        );
+
+        expect(response.status).toEqual(HttpStatus.UNAUTHORIZED);
+      });
     });
   });
 });
