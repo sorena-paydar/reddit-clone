@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -34,7 +35,10 @@ export class AuthService {
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
-          throw new ForbiddenException('Credentials taken');
+          throw new ForbiddenException({
+            success: false,
+            message: 'Credentials taken',
+          });
         }
       }
 
@@ -50,13 +54,19 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException({
+        success: false,
+        message: 'User not found',
+      });
     }
 
     const pwMatches = await argon.verify(user.password, dto.password);
 
     if (!pwMatches) {
-      throw new UnauthorizedException('Credentials incorrect');
+      throw new UnauthorizedException({
+        success: false,
+        message: 'Credentials incorrect',
+      });
     }
 
     return this.createJWTToken(user.id, user.email);
@@ -65,7 +75,7 @@ export class AuthService {
   async createJWTToken(
     userId: string,
     email: string,
-  ): Promise<{ access_token: string }> {
+  ): Promise<{ success: boolean; access_token: string }> {
     const payload = {
       sub: userId,
       email,
@@ -79,6 +89,7 @@ export class AuthService {
     });
 
     return {
+      success: true,
       access_token: token,
     };
   }
