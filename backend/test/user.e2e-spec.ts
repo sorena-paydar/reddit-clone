@@ -64,9 +64,19 @@ describe('/user', () => {
       .set({ Authorization: 'Bearer ' + access_token })
       .expect(HttpStatus.OK);
 
-    expect(success).toEqual(true);
-    expect(data.email).toEqual(authDto.email);
-    expect(data.username).toEqual(authDto.username);
+    expect({
+      success,
+      data: {
+        email: data.email,
+        username: data.username,
+      },
+    }).toEqual({
+      success: true,
+      data: {
+        email: authDto.email,
+        username: authDto.username,
+      },
+    });
   });
 
   it('/user/{username} GET (401: token not provided)', async () => {
