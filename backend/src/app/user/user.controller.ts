@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
 import { User } from '@prisma/client';
+import { StandardResponse } from '../../common/types/standardResponse';
 import { GetUser } from '../auth/decorator';
 import { JwtGuard } from '../auth/guard/jwt.guard';
 import { SubredditService } from '../subreddit/subreddit.service';
@@ -18,7 +19,7 @@ export class UserController {
   me(
     @Param('username') username: string,
     @GetUser() user: User,
-  ): Promise<User> {
+  ): Promise<StandardResponse<User>> {
     return this.userService.me(username, user);
   }
 
@@ -27,7 +28,7 @@ export class UserController {
     @Param('username') username: string,
     @GetUser() user: User,
     @Body() updateUserDto: UpdateUserDto,
-  ): Promise<User> {
+  ): Promise<StandardResponse<User>> {
     return this.userService.update(username, user, updateUserDto);
   }
 

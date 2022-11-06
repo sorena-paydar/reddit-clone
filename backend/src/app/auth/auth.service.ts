@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -9,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
 import * as argon from 'argon2';
+import { StandardResponse, Token } from '../../common/types/standardResponse';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto, RegisterDto } from './dto';
 
@@ -20,7 +20,7 @@ export class AuthService {
     private config: ConfigService,
   ) {}
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto): Promise<StandardResponse<Token>> {
     try {
       const hash = await argon.hash(dto.password);
 
@@ -35,10 +35,7 @@ export class AuthService {
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
-          throw new ForbiddenException({
-            success: false,
-            message: 'Credentials taken',
-          });
+          throw new ForbiddenException('Credentials taken');
         }
       }
 
@@ -46,7 +43,7 @@ export class AuthService {
     }
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto): Promise<StandardResponse<Token>> {
     const user = await this.prisma.user.findUnique({
       where: {
         email: dto.email,
@@ -54,19 +51,13 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new NotFoundException({
-        success: false,
-        message: 'User not found',
-      });
+      throw new NotFoundException('User not found');
     }
 
     const pwMatches = await argon.verify(user.password, dto.password);
 
     if (!pwMatches) {
-      throw new UnauthorizedException({
-        success: false,
-        message: 'Credentials incorrect',
-      });
+      throw new UnauthorizedException('Credentials incorrect');
     }
 
     return this.createJWTToken(user.id, user.email);
@@ -75,7 +66,7 @@ export class AuthService {
   async createJWTToken(
     userId: string,
     email: string,
-  ): Promise<{ success: boolean; access_token: string }> {
+  ): Promise<StandardResponse<Token>> {
     const payload = {
       sub: userId,
       email,
@@ -90,7 +81,7 @@ export class AuthService {
 
     return {
       success: true,
-      access_token: token,
+      data: { access_token: token },
     };
   }
 }
