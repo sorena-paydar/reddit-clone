@@ -1,17 +1,16 @@
 import {
   NotFoundException,
-  Injectable,
   ForbiddenException,
-  BadGatewayException,
+  Injectable,
 } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { StandardResponse } from '../../common/types/standardResponse';
-import { PrismaService } from '../prisma/prisma.service';
 import { UpdateUserDto } from './dto';
+import { UserRepository } from './user.repository';
 
 @Injectable({})
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private repository: UserRepository) {}
 
   async me(username: string, user: User): Promise<StandardResponse<User>> {
     /**
@@ -21,17 +20,7 @@ export class UserService {
       throw new NotFoundException(`${username} was not found`);
     }
 
-    try {
-      const userFromDb = await this.prisma.user.findUnique({
-        where: { username },
-      });
-
-      delete userFromDb.password;
-
-      return { success: true, data: userFromDb };
-    } catch (err) {
-      throw new BadGatewayException();
-    }
+    return this.repository.findOne(username);
   }
 
   async update(
@@ -47,14 +36,7 @@ export class UserService {
     }
 
     try {
-      const userFromDb = await this.prisma.user.update({
-        where: { username },
-        data: { ...updateUserDto },
-      });
-
-      delete userFromDb.password;
-
-      return { success: true, data: userFromDb };
+      return await this.repository.update(username, updateUserDto);
     } catch (err) {
       const {
         meta: { target },
