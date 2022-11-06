@@ -2,61 +2,45 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
-  BadRequestException,
+  BadGatewayException,
 } from '@nestjs/common';
 import { Subreddit, User } from '@prisma/client';
-import {
-  PrismaClientKnownRequestError,
-  PrismaClientValidationError,
-} from '@prisma/client/runtime';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
+import { StandardResponse } from '../../common/types/standardResponse';
 import { CreateSubredditDto, UpdateSubredditDto } from './dto';
+import { SubredditRepository } from './subreddit.repository';
 
 @Injectable({})
 export class SubredditService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private subreddits: SubredditRepository) {}
 
-  findAll(): Promise<Subreddit[]> {
-    return this.prisma.subreddit.findMany();
+  async getAllSubreddits(): Promise<StandardResponse<Subreddit[]>> {
+    return await this.subreddits.findAll();
   }
 
-  findUserSubreddits(username: string, user: User): Promise<Subreddit[]> {
+  async getUserSubreddits(
+    username: string,
+    user: User,
+  ): Promise<StandardResponse<Subreddit[]>> {
     if (username !== user.username) {
       throw new NotFoundException();
     }
 
-    return this.prisma.subreddit.findMany({
-      where: { userId: user.id },
-    });
+    return this.subreddits.findAllByUserId(user.id);
   }
 
-  async findOne(name: string): Promise<Subreddit> {
-    const subreddit = await this.prisma.subreddit.findFirst({
-      where: {
-        name,
-      },
-    });
-
-    if (!subreddit) {
-      throw new NotFoundException('Subreddit not found');
-    }
-
-    return subreddit;
+  async getSubredditByName(
+    subredditName: string,
+  ): Promise<StandardResponse<Subreddit>> {
+    return this.subreddits.findOne(subredditName);
   }
 
-  async create(
+  async createSubreddit(
     userId: string,
     createSubredditDto: CreateSubredditDto,
-  ): Promise<Subreddit> {
+  ): Promise<StandardResponse<Subreddit>> {
     try {
-      const subreddit = await this.prisma.subreddit.create({
-        data: {
-          userId,
-          ...createSubredditDto,
-        },
-      });
-
-      return subreddit;
+      return await this.subreddits.create(userId, createSubredditDto);
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
@@ -64,72 +48,39 @@ export class SubredditService {
         }
       }
 
-      if (error instanceof PrismaClientValidationError) {
-        throw new BadRequestException();
-      }
-
       throw error;
     }
   }
 
-  async update(
+  async updateSubredditById(
     subredditId: string,
     userId: string,
     updateSubredditDto: UpdateSubredditDto,
-  ): Promise<Subreddit> {
-    const subredditFromDb = await this.prisma.subreddit.findUnique({
-      where: { id: subredditId },
-    });
-
-    if (!subredditFromDb) {
-      throw new NotFoundException('Subreddit not found');
-    }
-
-    if (subredditFromDb.userId !== userId) {
-      throw new ForbiddenException('Access denied');
-    }
-
-    try {
-      const subreddit = await this.prisma.subreddit.update({
-        where: {
-          id: subredditId,
-        },
-        data: {
-          ...updateSubredditDto,
-        },
-      });
-
-      return subreddit;
-    } catch (error) {
-      if (error instanceof PrismaClientKnownRequestError) {
-        if (error.code === 'P2002') {
-          throw new ForbiddenException(`r/${updateSubredditDto.name} is taken`);
-        }
-      }
-
-      if (error instanceof PrismaClientValidationError) {
-        throw new BadRequestException();
-      }
-
-      throw error;
-    }
-  }
-
-  async delete(subredditId: string, userId: string) {
-    const subreddit = await this.prisma.subreddit.findUnique({
-      where: { id: subredditId },
-    });
-
-    if (!subreddit) {
-      throw new NotFoundException('Subreddit not found');
-    }
+  ): Promise<StandardResponse<Subreddit>> {
+    const subreddit = await this.subreddits.exists(subredditId);
 
     if (subreddit.userId !== userId) {
       throw new ForbiddenException('Access denied');
     }
 
-    return this.prisma.subreddit.delete({
-      where: { id: subredditId },
-    });
+    return await this.subreddits.update(
+      subredditId,
+      userId,
+      updateSubredditDto,
+    );
+  }
+
+  async deleteSubredditById(
+    subredditId: string,
+    userId: string,
+  ): Promise<StandardResponse<Subreddit>> {
+    await this.subreddits.exists(subredditId);
+    const data = await this.subreddits.delete(subredditId, userId);
+
+    if (data) return data;
+
+    throw new BadGatewayException(
+      `Failed to delete subreddit with id ${subredditId}`,
+    );
   }
 }

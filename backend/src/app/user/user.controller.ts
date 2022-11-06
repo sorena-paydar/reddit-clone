@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
-import { User } from '@prisma/client';
+import { Subreddit, User } from '@prisma/client';
 import { StandardResponse } from '../../common/types/standardResponse';
 import { GetUser } from '../auth/decorator';
 import { JwtGuard } from '../auth/guard/jwt.guard';
@@ -33,7 +33,10 @@ export class UserController {
   }
 
   @Get(':username/subreddits')
-  subreddits(@Param('username') username: string, @GetUser() user: User) {
-    return this.subredditService.findUserSubreddits(username, user);
+  subreddits(
+    @Param('username') username: string,
+    @GetUser() user: User,
+  ): Promise<StandardResponse<Subreddit[]>> {
+    return this.subredditService.getUserSubreddits(username, user);
   }
 }

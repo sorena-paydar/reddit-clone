@@ -1,6 +1,7 @@
 export interface StandardResponse<T> {
   success: boolean;
   data?: T;
+  count?: number;
 }
 
 export interface Token {

@@ -10,7 +10,9 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { Subreddit } from '@prisma/client';
 import { Public } from '../../common/decorators';
+import { StandardResponse } from '../../common/types/standardResponse';
 import { GetUser } from '../auth/decorator';
 import { JwtGuard } from '../auth/guard/jwt.guard';
 import { CreateSubredditDto, UpdateSubredditDto } from './dto';
@@ -23,31 +25,33 @@ export class SubredditController {
 
   @Get()
   @Public()
-  findAll() {
-    return this.subredditService.findAll();
+  getAllSubreddits(): Promise<StandardResponse<Subreddit[]>> {
+    return this.subredditService.getAllSubreddits();
   }
 
   @Get(':name')
   @Public()
-  findOne(@Param('name') name: string) {
-    return this.subredditService.findOne(name);
+  getSubredditByName(
+    @Param('name') name: string,
+  ): Promise<StandardResponse<Subreddit>> {
+    return this.subredditService.getSubredditByName(name);
   }
 
   @Post()
-  create(
+  createSubreddit(
     @GetUser('id') userId: string,
     @Body() createSubredditDto: CreateSubredditDto,
-  ) {
-    return this.subredditService.create(userId, createSubredditDto);
+  ): Promise<StandardResponse<Subreddit>> {
+    return this.subredditService.createSubreddit(userId, createSubredditDto);
   }
 
   @Patch(':id')
-  update(
+  updateSubredditById(
     @Param('id') subredditId: string,
     @GetUser('id') userId: string,
     @Body() updateSubredditDto: UpdateSubredditDto,
-  ) {
-    return this.subredditService.update(
+  ): Promise<StandardResponse<Subreddit>> {
+    return this.subredditService.updateSubredditById(
       subredditId,
       userId,
       updateSubredditDto,
@@ -56,7 +60,10 @@ export class SubredditController {
 
   @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(':id')
-  delete(@Param('id') subredditId: string, @GetUser('id') userId: string) {
-    return this.subredditService.delete(subredditId, userId);
+  deleteSubredditById(
+    @Param('id') subredditId: string,
+    @GetUser('id') userId: string,
+  ): Promise<StandardResponse<Subreddit>> {
+    return this.subredditService.deleteSubredditById(subredditId, userId);
   }
 }
