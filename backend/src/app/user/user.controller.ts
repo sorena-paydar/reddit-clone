@@ -39,4 +39,9 @@ export class UserController {
   ): Promise<StandardResponse<Subreddit[]>> {
     return this.subredditService.getUserSubreddits(username, user);
   }
+
+  @Get(':username/joined-subreddits')
+  joinedSubreddits(@Param('username') username: string, @GetUser() user: User) {
+    return this.subredditService.getUserJoinedSubreddits(username, user);
+  }
 }

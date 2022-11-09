@@ -10,7 +10,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { Subreddit } from '@prisma/client';
+import { Member, Subreddit } from '@prisma/client';
 import { Public } from '../../common/decorators';
 import { StandardResponse } from '../../common/types/standardResponse';
 import { GetUser } from '../auth/decorator';
@@ -65,5 +65,29 @@ export class SubredditController {
     @GetUser('id') userId: string,
   ): Promise<StandardResponse<Subreddit>> {
     return this.subredditService.deleteSubredditById(subredditId, userId);
+  }
+
+  @Get(':id/members')
+  @Public()
+  getSubredditMembers(
+    @Param('id') subredditId: string,
+  ): Promise<StandardResponse<Member[]>> {
+    return this.subredditService.getSubredditMembers(subredditId);
+  }
+
+  @Post(':id/join')
+  joinSubreddit(
+    @Param('id') subredditId: string,
+    @GetUser('id') userId: string,
+  ): Promise<StandardResponse<Member>> {
+    return this.subredditService.joinSubreddit(subredditId, userId);
+  }
+
+  @Post(':id/leave')
+  leaveSubreddit(
+    @Param('id') subredditId: string,
+    @GetUser('id') userId: string,
+  ): Promise<StandardResponse<Member>> {
+    return this.subredditService.leaveSubreddit(subredditId, userId);
   }
 }

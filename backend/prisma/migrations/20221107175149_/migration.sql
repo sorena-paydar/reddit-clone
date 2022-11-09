@@ -31,6 +31,15 @@ CREATE TABLE "subreddits" (
     CONSTRAINT "subreddits_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "members" (
+    "id" TEXT NOT NULL,
+    "subreddit_id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+
+    CONSTRAINT "members_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "users_id_key" ON "users"("id");
 
@@ -46,5 +55,14 @@ CREATE UNIQUE INDEX "subreddits_id_key" ON "subreddits"("id");
 -- CreateIndex
 CREATE UNIQUE INDEX "subreddits_name_key" ON "subreddits"("name");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "members_id_key" ON "members"("id");
+
 -- AddForeignKey
 ALTER TABLE "subreddits" ADD CONSTRAINT "subreddits_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "members" ADD CONSTRAINT "members_subreddit_id_fkey" FOREIGN KEY ("subreddit_id") REFERENCES "subreddits"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "members" ADD CONSTRAINT "members_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
