@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   BadGatewayException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { Member, Subreddit, User } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
@@ -45,7 +46,7 @@ export class SubredditService {
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
-          throw new ForbiddenException(`r/${createSubredditDto.name} is taken`);
+          throw new ConflictException(`r/${createSubredditDto.name} is taken`);
         }
       }
 
@@ -64,19 +65,32 @@ export class SubredditService {
       throw new ForbiddenException('Access denied');
     }
 
-    return await this.subreddits.update(
-      subredditId,
-      userId,
-      updateSubredditDto,
-    );
+    try {
+      return await this.subreddits.update(subredditId, updateSubredditDto);
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new ConflictException(`r/${updateSubredditDto.name} is taken`);
+        }
+      }
+
+      throw error;
+    }
   }
 
   async deleteSubredditById(
     subredditId: string,
     userId: string,
   ): Promise<StandardResponse<Subreddit>> {
-    await this.subreddits.exists(subredditId);
-    const data = await this.subreddits.delete(subredditId, userId);
+    // get subreddit from db by id if it exists
+    const subreddit = await this.subreddits.exists(subredditId);
+
+    // check if user the subreddit owner
+    if (subreddit.userId !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    const data = await this.subreddits.delete(subredditId);
 
     if (data) return data;
 
@@ -128,7 +142,10 @@ export class SubredditService {
     return this.subreddits.leave(subredditId, userId);
   }
 
-  async getUserJoinedSubreddits(username: string, user: User) {
+  async getUserJoinedSubreddits(
+    username: string,
+    user: User,
+  ): Promise<StandardResponse<Subreddit[]>> {
     if (username !== user.username) {
       throw new NotFoundException();
     }

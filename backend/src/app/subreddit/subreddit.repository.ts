@@ -97,16 +97,8 @@ export class SubredditRepository {
 
   async update(
     subredditId: string,
-    userId: string,
     updateSubredditDto: UpdateSubredditDto,
   ): Promise<StandardResponse<Subreddit>> {
-    // get subreddit from db by id
-    const subredditFromDb = await this.exists(subredditId);
-
-    if (subredditFromDb.userId !== userId) {
-      throw new ForbiddenException('Access denied');
-    }
-
     // update subreddit
     const subreddit = await this.prisma.subreddit.update({
       where: {
@@ -120,17 +112,7 @@ export class SubredditRepository {
     return { success: true, data: subreddit };
   }
 
-  async delete(
-    subredditId: string,
-    userId: string,
-  ): Promise<StandardResponse<Subreddit>> {
-    // get subreddit from db by id
-    const subredditFromDb = await this.exists(subredditId);
-
-    if (subredditFromDb.userId !== userId) {
-      throw new ForbiddenException('Access denied');
-    }
-
+  async delete(subredditId: string): Promise<StandardResponse<Subreddit>> {
     const deletedSubreddit = await this.prisma.subreddit.delete({
       where: { id: subredditId },
     });
@@ -223,7 +205,7 @@ export class SubredditRepository {
 
     // check if user is the owner
     if (subreddit.userId === userId) {
-      throw new BadRequestException(
+      throw new ForbiddenException(
         `User is the owner of subreddit with id ${subredditId}`,
       );
     }

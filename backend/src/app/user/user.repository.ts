@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { StandardResponse } from '../../common/types/standardResponse';
 import { PrismaService } from '../prisma/prisma.service';
-import { UpdateSubredditDto } from '../subreddit/dto';
+import * as argon from 'argon2';
+import { UpdateUserDto } from './dto';
 
 @Injectable()
 export class UserRepository {
@@ -20,11 +21,13 @@ export class UserRepository {
 
   async update(
     username: string,
-    updateUserDto: UpdateSubredditDto,
+    updateUserDto: UpdateUserDto,
   ): Promise<StandardResponse<User>> {
+    const hash = await argon.hash(updateUserDto.password);
+
     const userFromDb = await this.prisma.user.update({
       where: { username },
-      data: { ...updateUserDto },
+      data: { ...updateUserDto, password: hash },
     });
 
     delete userFromDb.password;

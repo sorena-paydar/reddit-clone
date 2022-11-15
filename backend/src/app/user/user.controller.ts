@@ -6,7 +6,21 @@ import { JwtGuard } from '../auth/guard/jwt.guard';
 import { SubredditService } from '../subreddit/subreddit.service';
 import { UpdateUserDto } from './dto';
 import { UserService } from './user.service';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOkResponse,
+  ApiNotFoundResponse,
+  ApiOperation,
+  ApiBody,
+  ApiForbiddenResponse,
+} from '@nestjs/swagger';
+import { createSchema } from '../../common/utils';
+import { SingleUserExample } from './examples';
+import { AllUserSubredditsExample } from '../subreddit/examples';
 
+@ApiBearerAuth()
+@ApiTags('User')
 @UseGuards(JwtGuard)
 @Controller('user')
 export class UserController {
@@ -16,6 +30,13 @@ export class UserController {
   ) {}
 
   @Get(':username')
+  @ApiOkResponse({
+    schema: createSchema(SingleUserExample),
+  })
+  @ApiNotFoundResponse({
+    description: '{username} was not found',
+  })
+  @ApiOperation({ summary: 'Get user data by username' })
   me(
     @Param('username') username: string,
     @GetUser() user: User,
@@ -24,6 +45,17 @@ export class UserController {
   }
 
   @Patch(':username')
+  @ApiBody({ type: UpdateUserDto })
+  @ApiOkResponse({
+    schema: createSchema(SingleUserExample),
+  })
+  @ApiNotFoundResponse({
+    description: '{username} was not found',
+  })
+  @ApiForbiddenResponse({
+    description: '{username} is not available',
+  })
+  @ApiOperation({ summary: 'Update user by username' })
   update(
     @Param('username') username: string,
     @GetUser() user: User,
@@ -33,6 +65,13 @@ export class UserController {
   }
 
   @Get(':username/subreddits')
+  @ApiOkResponse({
+    schema: createSchema(AllUserSubredditsExample),
+  })
+  @ApiNotFoundResponse({
+    description: '{username} was not found',
+  })
+  @ApiOperation({ summary: 'Get user owned subreddits' })
   subreddits(
     @Param('username') username: string,
     @GetUser() user: User,
@@ -41,7 +80,17 @@ export class UserController {
   }
 
   @Get(':username/joined-subreddits')
-  joinedSubreddits(@Param('username') username: string, @GetUser() user: User) {
+  @ApiOkResponse({
+    schema: createSchema(AllUserSubredditsExample),
+  })
+  @ApiNotFoundResponse({
+    description: '{username} was not found',
+  })
+  @ApiOperation({ summary: 'Get user joined subreddits' })
+  joinedSubreddits(
+    @Param('username') username: string,
+    @GetUser() user: User,
+  ): Promise<StandardResponse<Subreddit[]>> {
     return this.subredditService.getUserJoinedSubreddits(username, user);
   }
 }
