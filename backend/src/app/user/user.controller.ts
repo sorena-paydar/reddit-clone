@@ -1,4 +1,17 @@
-import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseFilePipe,
+  Patch,
+  Post,
+  Res,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { Subreddit, User } from '@prisma/client';
 import { StandardResponse } from '../../common/types/standardResponse';
 import { GetUser } from '../auth/decorator';
@@ -14,14 +27,24 @@ import {
   ApiOperation,
   ApiBody,
   ApiForbiddenResponse,
+  ApiConsumes,
+  ApiBadRequestResponse,
 } from '@nestjs/swagger';
-import { createSchema } from '../../common/utils';
 import { SingleUserExample } from './examples';
 import { AllUserSubredditsExample } from '../subreddit/examples';
+import { ApiFile } from './decorator/api-file.decorator';
+import {
+  UploadFileInterceptor,
+  ParamValidationInterceptor,
+} from '../../middleware';
+import { diskStorage } from 'multer';
+import { Response } from 'express';
+import { getDate, randomString, createSchema } from '../../common/utils';
 
 @ApiBearerAuth()
 @ApiTags('User')
 @UseGuards(JwtGuard)
+@UseInterceptors(ParamValidationInterceptor)
 @Controller('user')
 export class UserController {
   constructor(
@@ -37,11 +60,8 @@ export class UserController {
     description: '{username} was not found',
   })
   @ApiOperation({ summary: 'Get user data by username' })
-  me(
-    @Param('username') username: string,
-    @GetUser() user: User,
-  ): Promise<StandardResponse<User>> {
-    return this.userService.me(username, user);
+  me(@Param('username') username: string): Promise<StandardResponse<User>> {
+    return this.userService.me(username);
   }
 
   @Patch(':username')
@@ -58,10 +78,9 @@ export class UserController {
   @ApiOperation({ summary: 'Update user by username' })
   update(
     @Param('username') username: string,
-    @GetUser() user: User,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<StandardResponse<User>> {
-    return this.userService.update(username, user, updateUserDto);
+    return this.userService.update(username, updateUserDto);
   }
 
   @Get(':username/subreddits')
@@ -92,5 +111,75 @@ export class UserController {
     @GetUser() user: User,
   ): Promise<StandardResponse<Subreddit[]>> {
     return this.subredditService.getUserJoinedSubreddits(username, user);
+  }
+
+  @Post(':username/upload/avatar')
+  @ApiConsumes('multipart/form-data')
+  @ApiFile('avatar')
+  @ApiOkResponse({
+    description: 'User avatar',
+  })
+  @ApiBadRequestResponse({
+    description: 'File format is not valid',
+  })
+  @ApiNotFoundResponse({
+    description: '{username} was not found',
+  })
+  @ApiOperation({ summary: 'Upload user avatar' })
+  @UseInterceptors(
+    /**
+     * The `options` is a now function executed on intercept.
+     * This function receives the context parameter allowing you
+     * to use get the request and subsequentially the parameters
+     */
+    UploadFileInterceptor('avatar', (ctx) => {
+      // Get request from Context
+      const req: any = ctx.switchToHttp().getRequest() as Request;
+
+      // Return the options
+      return {
+        storage: diskStorage({
+          destination: `./media/user/avatar/${req.params.username}`,
+
+          // tslint:disable-next-line: variable-name
+          filename: (_req, file, cb) => {
+            return cb(
+              null,
+              `${getDate()}_${randomString(10)}_${file.originalname}`,
+            );
+          },
+        }),
+        fileFilter: (_req, file, cb) => {
+          // Check file mime-type
+          if (!Boolean(file.mimetype.match(/(jpg|jpeg|png)/)))
+            return cb(
+              new BadRequestException('File format is not valid'),
+              false,
+            );
+
+          return cb(null, true);
+        },
+      };
+    }),
+  )
+  uploadAvatar(
+    @UploadedFile(
+      new ParseFilePipe({
+        fileIsRequired: true,
+      }),
+    )
+    avatar: Express.Multer.File,
+    @Param('username') username: string,
+  ): Promise<StandardResponse<null>> {
+    return this.userService.uploadAvatar(avatar, username);
+  }
+
+  @Get(':username/avatar')
+  @ApiNotFoundResponse({
+    description: '{username} was not found',
+  })
+  @ApiOperation({ summary: 'Get user avatar' })
+  avatar(@Param('username') username: string, @Res() res: Response) {
+    return this.userService.avatar(username, res);
   }
 }

@@ -1,40 +1,23 @@
-import {
-  NotFoundException,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { StandardResponse } from '../../common/types/standardResponse';
 import { UpdateUserDto } from './dto';
 import { UserRepository } from './user.repository';
+import { join } from 'path';
+import { Response } from 'express';
 
 @Injectable({})
 export class UserService {
   constructor(private repository: UserRepository) {}
 
-  async me(username: string, user: User): Promise<StandardResponse<User>> {
-    /**
-     * check if username in query is equal to requested user
-     */
-    if (username !== user.username) {
-      throw new NotFoundException(`${username} was not found`);
-    }
-
+  async me(username: string): Promise<StandardResponse<User>> {
     return this.repository.findOne(username);
   }
 
   async update(
     username: string,
-    user: User,
     updateUserDto: UpdateUserDto,
   ): Promise<StandardResponse<User>> {
-    /**
-     * check if username in query is equal to requested user
-     */
-    if (username !== user.username) {
-      throw new NotFoundException(`${username} was not found`);
-    }
-
     try {
       return await this.repository.update(username, updateUserDto);
     } catch (err) {
@@ -44,5 +27,22 @@ export class UserService {
 
       throw new ForbiddenException(`${target} is not available`);
     }
+  }
+
+  async uploadAvatar(
+    avatar: Express.Multer.File,
+    username: string,
+  ): Promise<StandardResponse<null>> {
+    await this.repository.update(username, {
+      avatar: `/media/user/avatar/${username}/${avatar?.filename}`,
+    });
+
+    return { success: true };
+  }
+
+  async avatar(username: string, res: Response) {
+    const { data } = await this.repository.findOne(username);
+
+    return res.sendFile(join(process.cwd(), data.avatar));
   }
 }

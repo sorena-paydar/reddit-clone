@@ -53,7 +53,8 @@ export class UpdateUserDto {
 
   @ApiProperty({
     nullable: true,
-    example: null,
+    type: 'string',
+    format: 'binary',
   })
   @IsString()
   @IsOptional()
