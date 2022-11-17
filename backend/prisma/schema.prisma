@@ -42,7 +42,7 @@ model Subreddit {
   avatar      String?
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
-  user        User     @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String   @map("user_id")
   Members     Member[]
 
@@ -51,7 +51,7 @@ model Subreddit {
 
 model Member {
   id          String    @id @unique @default(uuid())
-  subreddit   Subreddit @relation(fields: [subredditId], references: [id])
+  subreddit   Subreddit @relation(fields: [subredditId], references: [id], onDelete: Cascade)
   subredditId String    @map("subreddit_id")
   user        User      @relation(fields: [userId], references: [id])
   userId      String    @map("user_id")
