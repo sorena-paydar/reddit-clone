@@ -1,9 +1,9 @@
-export interface StandardResponse<T> {
+export class StandardResponse<T> {
   success: boolean;
   data?: T;
   count?: number;
 }
 
-export interface Token {
+export class Token {
   access_token: string;
 }
