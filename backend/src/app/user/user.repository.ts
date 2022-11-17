@@ -23,11 +23,13 @@ export class UserRepository {
     username: string,
     updateUserDto: UpdateUserDto,
   ): Promise<StandardResponse<User>> {
-    const hash = await argon.hash(updateUserDto.password);
+    let hash: string;
+
+    if (updateUserDto.password) hash = await argon.hash(updateUserDto.password);
 
     const userFromDb = await this.prisma.user.update({
       where: { username },
-      data: { ...updateUserDto, password: hash },
+      data: { ...updateUserDto, ...(hash && { password: hash }) },
     });
 
     delete userFromDb.password;
