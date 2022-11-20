@@ -3,6 +3,8 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseFilePipe,
   Patch,
@@ -28,6 +30,7 @@ import {
   ApiForbiddenResponse,
   ApiConsumes,
   ApiBadRequestResponse,
+  ApiCreatedResponse,
 } from '@nestjs/swagger';
 import { SingleUserExample } from './examples';
 import { AllUserSubredditsExample } from '../subreddit/examples';
@@ -116,7 +119,7 @@ export class UserController {
   @Post(':username/upload-avatar')
   @ApiConsumes('multipart/form-data')
   @ApiFile('avatar')
-  @ApiOkResponse({
+  @ApiCreatedResponse({
     description: 'User avatar',
   })
   @ApiBadRequestResponse({
@@ -181,6 +184,7 @@ export class UserController {
     return this.userService.uploadAvatar(avatar, username);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post(':username/remove-avatar')
   @ApiOkResponse({
     schema: createSchema(SingleUserExample),

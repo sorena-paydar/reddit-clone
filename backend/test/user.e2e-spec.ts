@@ -98,4 +98,26 @@ describe('/user', () => {
       .set({ Authorization: 'Bearer ' + access_token })
       .expect(HttpStatus.NOT_FOUND);
   });
+
+  it('/user/{username}/upload-avatar POST', async () => {
+    const buffer = Buffer.from('my avatar');
+
+    const response = await request(app.getHttpServer())
+      .post(`/user/${authDto.username}/upload-avatar`)
+      .set({ Authorization: 'Bearer ' + access_token })
+      .attach('avatar', buffer, 'user_avatar.png')
+      .expect(HttpStatus.CREATED);
+
+    expect(response.body.success).toEqual(true);
+  });
+
+  it('/user/{username}/remove-avatar POST', async () => {
+    const response = await request(app.getHttpServer())
+      .post(`/user/${authDto.username}/remove-avatar`)
+      .set({ Authorization: 'Bearer ' + access_token })
+      .expect(HttpStatus.OK);
+
+    expect(response.body.success).toEqual(true);
+    expect(response.body.data.avatar).toEqual(null);
+  });
 });

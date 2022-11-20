@@ -264,6 +264,7 @@ export class SubredditController {
     return this.subredditService.joinSubreddit(subredditId, userId);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post(':id/leave')
   @ApiOkResponse({
     schema: createSchema(SingleSubredditExample),
@@ -354,6 +355,7 @@ export class SubredditController {
     return this.subredditService.uploadAvatar(avatar, subredditName, userId);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post(':id/remove-avatar')
   @ApiOkResponse({
     schema: createSchema(SingleSubredditExample),

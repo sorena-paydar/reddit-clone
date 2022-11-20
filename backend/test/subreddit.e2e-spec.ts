@@ -144,6 +144,28 @@ describe('/r', () => {
     });
   });
 
+  it('/r/{name}/upload-avatar POST', async () => {
+    const buffer = Buffer.from('subreddit avatar');
+
+    const response = await request(app.getHttpServer())
+      .post(`/r/${subreddit.name}/upload-avatar`)
+      .set({ Authorization: 'Bearer ' + access_token })
+      .attach('avatar', buffer, 'subreddit_avatar.png')
+      .expect(HttpStatus.CREATED);
+
+    expect(response.body.success).toEqual(true);
+  });
+
+  it('/r/{name}/remove-avatar POST', async () => {
+    const response = await request(app.getHttpServer())
+      .post(`/r/${subreddit_id}/remove-avatar`)
+      .set({ Authorization: 'Bearer ' + access_token })
+      .expect(HttpStatus.OK);
+
+    expect(response.body.success).toEqual(true);
+    expect(response.body.data.avatar).toEqual(null);
+  });
+
   it('/r/{id} DELETE', async () => {
     await request(app.getHttpServer())
       .delete(`/r/${subreddit_id}`)
