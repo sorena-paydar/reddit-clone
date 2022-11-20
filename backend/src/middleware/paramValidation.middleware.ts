@@ -6,12 +6,16 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { checkUsername } from '../common/utils/checkUsername';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class ParamValidationInterceptor implements NestInterceptor {
   intercept(ctx: ExecutionContext, next: CallHandler): Observable<any> {
     // Get request from Context
-    const req: any = ctx.switchToHttp().getRequest() as Request;
+    const req = ctx.switchToHttp().getRequest() as Request & {
+      params: { username: string };
+      user: User;
+    };
 
     // Check username in request param
     checkUsername(req.params.username, req.user);

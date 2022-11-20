@@ -1,14 +1,16 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
-import { StandardResponse } from '../../common/types/standardResponse';
+import { Image, StandardResponse } from '../../common/types/standardResponse';
 import { UpdateUserDto } from './dto';
 import { UserRepository } from './user.repository';
-import { join } from 'path';
-import { Response } from 'express';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable({})
 export class UserService {
-  constructor(private repository: UserRepository) {}
+  constructor(
+    private repository: UserRepository,
+    private config: ConfigService,
+  ) {}
 
   async me(username: string): Promise<StandardResponse<User>> {
     return this.repository.findOne(username);
@@ -32,17 +34,11 @@ export class UserService {
   async uploadAvatar(
     avatar: Express.Multer.File,
     username: string,
-  ): Promise<StandardResponse<null>> {
-    await this.repository.update(username, {
-      avatar: `/media/user/avatar/${username}/${avatar?.filename}`,
+  ): Promise<StandardResponse<Image>> {
+    const { data } = await this.repository.update(username, {
+      avatar: `${this.config.get('BASE_URL')}/static/${avatar.filename}`,
     });
 
-    return { success: true };
-  }
-
-  async avatar(username: string, res: Response) {
-    const { data } = await this.repository.findOne(username);
-
-    return res.sendFile(join(process.cwd(), data.avatar));
+    return { success: true, data: { imageUrl: data.avatar } };
   }
 }

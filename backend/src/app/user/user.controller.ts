@@ -7,13 +7,12 @@ import {
   ParseFilePipe,
   Patch,
   Post,
-  Res,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { Subreddit, User } from '@prisma/client';
-import { StandardResponse } from '../../common/types/standardResponse';
+import { Image, StandardResponse } from '../../common/types/standardResponse';
 import { GetUser } from '../auth/decorator';
 import { JwtGuard } from '../auth/guard/jwt.guard';
 import { SubredditService } from '../subreddit/subreddit.service';
@@ -38,8 +37,8 @@ import {
   ParamValidationInterceptor,
 } from '../../middleware';
 import { diskStorage } from 'multer';
-import { Response } from 'express';
 import { getDate, randomString, createSchema } from '../../common/utils';
+import * as path from 'path';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -106,6 +105,7 @@ export class UserController {
     description: '{username} was not found',
   })
   @ApiOperation({ summary: 'Get user joined subreddits' })
+  @UseInterceptors(ParamValidationInterceptor)
   joinedSubreddits(
     @Param('username') username: string,
     @GetUser() user: User,
@@ -134,18 +134,25 @@ export class UserController {
      */
     UploadFileInterceptor('avatar', (ctx) => {
       // Get request from Context
-      const req: any = ctx.switchToHttp().getRequest() as Request;
+      const req = ctx.switchToHttp().getRequest() as Request & {
+        params: {
+          username: string;
+        };
+      };
 
       // Return the options
       return {
         storage: diskStorage({
-          destination: `./media/user/avatar/${req.params.username}`,
+          destination: './media',
 
-          // tslint:disable-next-line: variable-name
           filename: (_req, file, cb) => {
+            const fileExtension = path.extname(file.originalname);
+
             return cb(
               null,
-              `${getDate()}_${randomString(10)}_${file.originalname}`,
+              `${req.params.username}_${getDate()}_${randomString(
+                16,
+              )}${fileExtension}`,
             );
           },
         }),
@@ -170,16 +177,7 @@ export class UserController {
     )
     avatar: Express.Multer.File,
     @Param('username') username: string,
-  ): Promise<StandardResponse<null>> {
+  ): Promise<StandardResponse<Image>> {
     return this.userService.uploadAvatar(avatar, username);
-  }
-
-  @Get(':username/avatar')
-  @ApiNotFoundResponse({
-    description: '{username} was not found',
-  })
-  @ApiOperation({ summary: 'Get user avatar' })
-  avatar(@Param('username') username: string, @Res() res: Response) {
-    return this.userService.avatar(username, res);
   }
 }

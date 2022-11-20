@@ -7,3 +7,7 @@ export class StandardResponse<T> {
 export class Token {
   access_token: string;
 }
+
+export class Image {
+  imageUrl: string;
+}
