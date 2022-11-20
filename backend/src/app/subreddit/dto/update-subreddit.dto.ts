@@ -2,16 +2,13 @@ import { IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateSubredditDto {
-  @ApiProperty({
-    nullable: true,
-    example: 'hacking',
-  })
+  @ApiProperty({ required: false, example: 'hacking' })
   @IsString()
   @IsOptional()
   name?: string;
 
   @ApiProperty({
-    nullable: true,
+    required: false,
     example: 'hacking subreddit',
   })
   @IsString()
@@ -19,8 +16,9 @@ export class UpdateSubredditDto {
   description?: string;
 
   @ApiProperty({
-    nullable: true,
-    example: null,
+    required: false,
+    type: 'string',
+    format: 'binary',
   })
   @IsString()
   @IsOptional()

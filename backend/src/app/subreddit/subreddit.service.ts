@@ -40,9 +40,10 @@ export class SubredditService {
   async createSubreddit(
     userId: string,
     createSubredditDto: CreateSubredditDto,
+    avatar: Express.Multer.File,
   ): Promise<StandardResponse<Subreddit>> {
     try {
-      return await this.subreddits.create(userId, createSubredditDto);
+      return await this.subreddits.create(userId, createSubredditDto, avatar);
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
@@ -58,6 +59,7 @@ export class SubredditService {
     subredditId: string,
     userId: string,
     updateSubredditDto: UpdateSubredditDto,
+    avatar: Express.Multer.File,
   ): Promise<StandardResponse<Subreddit>> {
     const subreddit = await this.subreddits.exists(subredditId);
 
@@ -66,7 +68,11 @@ export class SubredditService {
     }
 
     try {
-      return await this.subreddits.update(subredditId, updateSubredditDto);
+      return await this.subreddits.update(
+        subredditId,
+        updateSubredditDto,
+        avatar,
+      );
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {

@@ -9,6 +9,10 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
+  UploadedFile,
+  UseInterceptors,
+  BadRequestException,
+  ParseFilePipe,
 } from '@nestjs/common';
 import { Member, Subreddit } from '@prisma/client';
 import { Public } from '../../common/decorators';
@@ -30,13 +34,17 @@ import {
   ApiNoContentResponse,
   ApiBadGatewayResponse,
   ApiBadRequestResponse,
+  ApiConsumes,
 } from '@nestjs/swagger';
-import { createSchema } from '../../common/utils';
+import { createSchema, getDate, randomString } from '../../common/utils';
 import {
   AllSubredditMembersExample,
   AllSubredditsExample,
   SingleSubredditExample,
 } from './examples';
+import { UploadFileInterceptor } from '../../middleware';
+import { diskStorage } from 'multer';
+import * as path from 'path';
 
 @ApiBearerAuth()
 @ApiTags('Subreddits')
@@ -71,6 +79,7 @@ export class SubredditController {
   }
 
   @Post()
+  @ApiConsumes('multipart/form-data')
   @ApiBody({
     type: CreateSubredditDto,
   })
@@ -81,14 +90,61 @@ export class SubredditController {
     description: '{name} is taken',
   })
   @ApiOperation({ summary: 'Create new subreddit' })
+  @UseInterceptors(
+    UploadFileInterceptor('avatar', (ctx) => {
+      // Get request from Context
+      const req = ctx.switchToHttp().getRequest() as Request & {
+        body: CreateSubredditDto;
+      };
+
+      // Return the options
+      return {
+        storage: diskStorage({
+          destination: './media',
+
+          filename: (_req, file, cb) => {
+            const fileExtension = path.extname(file.originalname);
+
+            return cb(
+              null,
+              `${req.body.name}_${getDate()}_${randomString(
+                16,
+              )}${fileExtension}`,
+            );
+          },
+        }),
+        fileFilter: (_req, file, cb) => {
+          // Check file mime-type
+          if (!Boolean(file.mimetype.match(/(jpg|jpeg|png)/)))
+            return cb(
+              new BadRequestException('File format is not valid'),
+              false,
+            );
+
+          return cb(null, true);
+        },
+      };
+    }),
+  )
   createSubreddit(
     @GetUser('id') userId: string,
     @Body() createSubredditDto: CreateSubredditDto,
+    @UploadedFile(
+      new ParseFilePipe({
+        fileIsRequired: false,
+      }),
+    )
+    avatar: Express.Multer.File,
   ): Promise<StandardResponse<Subreddit>> {
-    return this.subredditService.createSubreddit(userId, createSubredditDto);
+    return this.subredditService.createSubreddit(
+      userId,
+      createSubredditDto,
+      avatar,
+    );
   }
 
   @Patch(':id')
+  @ApiConsumes('multipart/form-data')
   @ApiBody({
     type: UpdateSubredditDto,
   })
@@ -102,15 +158,58 @@ export class SubredditController {
     description: '{name} is taken',
   })
   @ApiOperation({ summary: 'Update subreddit by id' })
+  @UseInterceptors(
+    UploadFileInterceptor('avatar', (ctx) => {
+      // Get request from Context
+      const req = ctx.switchToHttp().getRequest() as Request & {
+        body: UpdateSubredditDto;
+      };
+
+      // Return the options
+      return {
+        storage: diskStorage({
+          destination: './media',
+
+          filename: (_req, file, cb) => {
+            const fileExtension = path.extname(file.originalname);
+
+            return cb(
+              null,
+              `${req.body.name}_${getDate()}_${randomString(
+                16,
+              )}${fileExtension}`,
+            );
+          },
+        }),
+        fileFilter: (_req, file, cb) => {
+          // Check file mime-type
+          if (!Boolean(file.mimetype.match(/(jpg|jpeg|png)/)))
+            return cb(
+              new BadRequestException('File format is not valid'),
+              false,
+            );
+
+          return cb(null, true);
+        },
+      };
+    }),
+  )
   updateSubredditById(
     @Param('id') subredditId: string,
     @GetUser('id') userId: string,
     @Body() updateSubredditDto: UpdateSubredditDto,
+    @UploadedFile(
+      new ParseFilePipe({
+        fileIsRequired: false,
+      }),
+    )
+    avatar: Express.Multer.File,
   ): Promise<StandardResponse<Subreddit>> {
     return this.subredditService.updateSubredditById(
       subredditId,
       userId,
       updateSubredditDto,
+      avatar,
     );
   }
 

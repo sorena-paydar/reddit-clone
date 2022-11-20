@@ -2,8 +2,8 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
-  BadRequestException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Member, Subreddit } from '@prisma/client';
 import { StandardResponse } from '../../common/types/standardResponse';
 import { PrismaService } from '../prisma/prisma.service';
@@ -11,7 +11,7 @@ import { CreateSubredditDto, UpdateSubredditDto } from './dto';
 
 @Injectable()
 export class SubredditRepository {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private config: ConfigService) {}
 
   async findAll(): Promise<StandardResponse<Subreddit[]>> {
     // get all subreddits
@@ -78,12 +78,19 @@ export class SubredditRepository {
   async create(
     userId: string,
     createSubredditDto: CreateSubredditDto,
+    avatar: Express.Multer.File,
   ): Promise<StandardResponse<Subreddit>> {
+    // Check if avatar is null
+    const subredditAvatar = avatar
+      ? `${this.config.get('BASE_URL')}/static/${avatar.filename}`
+      : null;
+
     // create subreddit
     const subreddit = await this.prisma.subreddit.create({
       data: {
         userId,
         ...createSubredditDto,
+        avatar: subredditAvatar,
       },
     });
 
@@ -98,7 +105,13 @@ export class SubredditRepository {
   async update(
     subredditId: string,
     updateSubredditDto: UpdateSubredditDto,
+    avatar: Express.Multer.File,
   ): Promise<StandardResponse<Subreddit>> {
+    // Check if avatar is null
+    const subredditAvatar = avatar
+      ? `${this.config.get('BASE_URL')}/static/${avatar.filename}`
+      : null;
+
     // update subreddit
     const subreddit = await this.prisma.subreddit.update({
       where: {
@@ -106,6 +119,7 @@ export class SubredditRepository {
       },
       data: {
         ...updateSubredditDto,
+        avatar: subredditAvatar,
       },
     });
 

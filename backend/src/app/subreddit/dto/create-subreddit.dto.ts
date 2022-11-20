@@ -9,7 +9,7 @@ export class CreateSubredditDto {
   name: string;
 
   @ApiProperty({
-    nullable: true,
+    required: false,
     example: 'Computer Programming',
   })
   @IsString()
@@ -17,8 +17,9 @@ export class CreateSubredditDto {
   description?: string;
 
   @ApiProperty({
-    nullable: true,
-    example: null,
+    required: false,
+    type: 'string',
+    format: 'binary',
   })
   @IsString()
   @IsOptional()

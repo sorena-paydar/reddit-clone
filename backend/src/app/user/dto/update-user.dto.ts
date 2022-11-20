@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateUserDto {
   @ApiProperty({
-    nullable: true,
+    required: false,
     example: 'sorena@example.com',
   })
   @IsEmail()
@@ -12,7 +12,7 @@ export class UpdateUserDto {
   email?: string;
 
   @ApiProperty({
-    nullable: true,
+    required: false,
     example: 'sorena-paydar',
   })
   @IsString()
@@ -20,7 +20,7 @@ export class UpdateUserDto {
   username?: string;
 
   @ApiProperty({
-    nullable: true,
+    required: false,
     example: '1234',
   })
   @IsString()
@@ -28,7 +28,7 @@ export class UpdateUserDto {
   password?: string;
 
   @ApiProperty({
-    nullable: true,
+    required: false,
     example: 'sorena',
   })
   @IsString()
@@ -36,7 +36,7 @@ export class UpdateUserDto {
   displayName?: string;
 
   @ApiProperty({
-    nullable: true,
+    required: false,
     example: 'software engineer',
   })
   @IsString()
@@ -44,7 +44,7 @@ export class UpdateUserDto {
   bio?: string;
 
   @ApiProperty({
-    nullable: true,
+    required: false,
     example: 'Male',
   })
   @IsEnum(Gender)
@@ -52,7 +52,7 @@ export class UpdateUserDto {
   gender?: Gender;
 
   @ApiProperty({
-    nullable: true,
+    required: false,
     type: 'string',
     format: 'binary',
   })
