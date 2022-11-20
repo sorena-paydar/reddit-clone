@@ -1,20 +1,23 @@
 import {
   Injectable,
   NotFoundException,
-  ForbiddenException,
   BadGatewayException,
   BadRequestException,
   ConflictException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Member, Subreddit, User } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
-import { StandardResponse } from '../../common/types/standardResponse';
+import { Image, StandardResponse } from '../../common/types/standardResponse';
 import { CreateSubredditDto, UpdateSubredditDto } from './dto';
 import { SubredditRepository } from './subreddit.repository';
 
 @Injectable({})
 export class SubredditService {
-  constructor(private subreddits: SubredditRepository) {}
+  constructor(
+    private subreddits: SubredditRepository,
+    private config: ConfigService,
+  ) {}
 
   async getAllSubreddits(): Promise<StandardResponse<Subreddit[]>> {
     return await this.subreddits.findAll();
@@ -59,20 +62,11 @@ export class SubredditService {
     subredditId: string,
     userId: string,
     updateSubredditDto: UpdateSubredditDto,
-    avatar: Express.Multer.File,
   ): Promise<StandardResponse<Subreddit>> {
-    const subreddit = await this.subreddits.exists(subredditId);
-
-    if (subreddit.userId !== userId) {
-      throw new ForbiddenException('Access denied');
-    }
+    await this.subreddits.hasPermission(userId, subredditId);
 
     try {
-      return await this.subreddits.update(
-        subredditId,
-        updateSubredditDto,
-        avatar,
-      );
+      return await this.subreddits.update(subredditId, updateSubredditDto);
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
@@ -88,13 +82,7 @@ export class SubredditService {
     subredditId: string,
     userId: string,
   ): Promise<StandardResponse<Subreddit>> {
-    // get subreddit from db by id if it exists
-    const subreddit = await this.subreddits.exists(subredditId);
-
-    // check if user the subreddit owner
-    if (subreddit.userId !== userId) {
-      throw new ForbiddenException('Access denied');
-    }
+    await this.subreddits.hasPermission(userId, subredditId);
 
     const data = await this.subreddits.delete(subredditId);
 
@@ -157,5 +145,25 @@ export class SubredditService {
     }
 
     return this.subreddits.joinedSubreddits(user.id);
+  }
+
+  async uploadAvatar(
+    avatar: Express.Multer.File,
+    subredditName: string,
+    userId: string,
+  ): Promise<StandardResponse<Image>> {
+    // Get subreddit by name
+    const {
+      data: { id },
+    } = await this.subreddits.findOne(subredditName);
+
+    await this.subreddits.hasPermission(userId, id);
+
+    // Update subreddit by id
+    const { data } = await this.subreddits.update(id, {
+      avatar: `${this.config.get('BASE_URL')}/static/${avatar.filename}`,
+    });
+
+    return { success: true, data: { imageUrl: data.avatar } };
   }
 }

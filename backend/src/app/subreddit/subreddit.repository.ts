@@ -105,13 +105,7 @@ export class SubredditRepository {
   async update(
     subredditId: string,
     updateSubredditDto: UpdateSubredditDto,
-    avatar: Express.Multer.File,
   ): Promise<StandardResponse<Subreddit>> {
-    // Check if avatar is null
-    const subredditAvatar = avatar
-      ? `${this.config.get('BASE_URL')}/static/${avatar.filename}`
-      : null;
-
     // update subreddit
     const subreddit = await this.prisma.subreddit.update({
       where: {
@@ -119,7 +113,6 @@ export class SubredditRepository {
       },
       data: {
         ...updateSubredditDto,
-        avatar: subredditAvatar,
       },
     });
 
@@ -262,5 +255,21 @@ export class SubredditRepository {
       data,
       count: data.length,
     };
+  }
+
+  /**
+   * Checks whether user has the permission to continue or not.
+   * @param {userId} userId - User id
+   * @param {subredditId} subredditId - Subreddit id
+   * @return {Promise<void>} Throw ForbiddenException if user does not have the permission.
+   */
+  async hasPermission(userId: string, subredditId: string): Promise<void> {
+    // get subreddit from db by id if it exists
+    const subreddit = await this.exists(subredditId);
+
+    // check if user the subreddit owner
+    if (subreddit.userId !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
   }
 }

@@ -113,7 +113,7 @@ export class UserController {
     return this.subredditService.getUserJoinedSubreddits(username, user);
   }
 
-  @Post(':username/upload/avatar')
+  @Post(':username/upload-avatar')
   @ApiConsumes('multipart/form-data')
   @ApiFile('avatar')
   @ApiOkResponse({
@@ -179,5 +179,22 @@ export class UserController {
     @Param('username') username: string,
   ): Promise<StandardResponse<Image>> {
     return this.userService.uploadAvatar(avatar, username);
+  }
+
+  @Post(':username/remove-avatar')
+  @ApiOkResponse({
+    schema: createSchema(SingleUserExample),
+  })
+  @ApiNotFoundResponse({
+    description: '{username} was not found',
+  })
+  @ApiForbiddenResponse({
+    description: '{username} is not available',
+  })
+  @ApiOperation({ summary: 'Remove user avatar by username' })
+  removeAvatar(
+    @Param('username') username: string,
+  ): Promise<StandardResponse<User>> {
+    return this.userService.update(username, { avatar: null });
   }
 }

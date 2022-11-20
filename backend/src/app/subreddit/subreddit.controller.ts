@@ -16,7 +16,7 @@ import {
 } from '@nestjs/common';
 import { Member, Subreddit } from '@prisma/client';
 import { Public } from '../../common/decorators';
-import { StandardResponse } from '../../common/types/standardResponse';
+import { Image, StandardResponse } from '../../common/types/standardResponse';
 import { GetUser } from '../auth/decorator';
 import { JwtGuard } from '../auth/guard/jwt.guard';
 import { CreateSubredditDto, UpdateSubredditDto } from './dto';
@@ -45,6 +45,7 @@ import {
 import { UploadFileInterceptor } from '../../middleware';
 import { diskStorage } from 'multer';
 import * as path from 'path';
+import { ApiFile } from '../user/decorator';
 
 @ApiBearerAuth()
 @ApiTags('Subreddits')
@@ -144,7 +145,6 @@ export class SubredditController {
   }
 
   @Patch(':id')
-  @ApiConsumes('multipart/form-data')
   @ApiBody({
     type: UpdateSubredditDto,
   })
@@ -198,18 +198,11 @@ export class SubredditController {
     @Param('id') subredditId: string,
     @GetUser('id') userId: string,
     @Body() updateSubredditDto: UpdateSubredditDto,
-    @UploadedFile(
-      new ParseFilePipe({
-        fileIsRequired: false,
-      }),
-    )
-    avatar: Express.Multer.File,
   ): Promise<StandardResponse<Subreddit>> {
     return this.subredditService.updateSubredditById(
       subredditId,
       userId,
       updateSubredditDto,
-      avatar,
     );
   }
 
@@ -290,5 +283,94 @@ export class SubredditController {
     @GetUser('id') userId: string,
   ): Promise<StandardResponse<Member>> {
     return this.subredditService.leaveSubreddit(subredditId, userId);
+  }
+
+  @Post(':name/upload-avatar')
+  @ApiConsumes('multipart/form-data')
+  @ApiFile('avatar')
+  @ApiOkResponse({
+    description: 'Subreddit avatar',
+  })
+  @ApiForbiddenResponse({
+    description: 'Access denied',
+  })
+  @ApiBadRequestResponse({
+    description: 'File format is not valid',
+  })
+  @ApiOperation({ summary: 'Upload subreddit avatar' })
+  @UseInterceptors(
+    /**
+     * The `options` is a now function executed on intercept.
+     * This function receives the context parameter allowing you
+     * to use get the request and subsequentially the parameters
+     */
+    UploadFileInterceptor('avatar', (ctx) => {
+      // Get request from Context
+      const req = ctx.switchToHttp().getRequest() as Request & {
+        params: {
+          name: string;
+        };
+      };
+
+      // Return the options
+      return {
+        storage: diskStorage({
+          destination: './media',
+
+          filename: (_req, file, cb) => {
+            const fileExtension = path.extname(file.originalname);
+
+            return cb(
+              null,
+              `${req.params.name}_${getDate()}_${randomString(
+                16,
+              )}${fileExtension}`,
+            );
+          },
+        }),
+        fileFilter: (_req, file, cb) => {
+          // Check file mime-type
+          if (!Boolean(file.mimetype.match(/(jpg|jpeg|png)/)))
+            return cb(
+              new BadRequestException('File format is not valid'),
+              false,
+            );
+
+          return cb(null, true);
+        },
+      };
+    }),
+  )
+  uploadAvatar(
+    @UploadedFile(
+      new ParseFilePipe({
+        fileIsRequired: true,
+      }),
+    )
+    avatar: Express.Multer.File,
+    @Param('name') subredditName: string,
+    @GetUser('id') userId: string,
+  ): Promise<StandardResponse<Image>> {
+    return this.subredditService.uploadAvatar(avatar, subredditName, userId);
+  }
+
+  @Post(':id/remove-avatar')
+  @ApiOkResponse({
+    schema: createSchema(SingleSubredditExample),
+  })
+  @ApiNotFoundResponse({
+    description: '{username} was not found',
+  })
+  @ApiForbiddenResponse({
+    description: '{username} is not available',
+  })
+  @ApiOperation({ summary: 'Remove user avatar by username' })
+  removeAvatar(
+    @Param('id') subredditId: string,
+    @GetUser('id') userId: string,
+  ): Promise<StandardResponse<Subreddit>> {
+    return this.subredditService.updateSubredditById(subredditId, userId, {
+      avatar: null,
+    });
   }
 }
