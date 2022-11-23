@@ -10,18 +10,15 @@ import {
   Patch,
   Post,
   UploadedFile,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { Subreddit, User } from '@prisma/client';
 import { Image, StandardResponse } from '../../common/types/standardResponse';
-import { GetUser } from '../auth/decorator';
-import { JwtGuard } from '../auth/guard/jwt.guard';
+import { Auth, GetUser } from '../auth/decorator';
 import { SubredditService } from '../subreddit/subreddit.service';
 import { UpdateUserDto } from './dto';
 import { UserService } from './user.service';
 import {
-  ApiBearerAuth,
   ApiTags,
   ApiOkResponse,
   ApiNotFoundResponse,
@@ -43,9 +40,8 @@ import { diskStorage } from 'multer';
 import { getDate, randomString, createSchema } from '../../common/utils';
 import * as path from 'path';
 
-@ApiBearerAuth()
+@Auth()
 @ApiTags('User')
-@UseGuards(JwtGuard)
 @UseInterceptors(ParamValidationInterceptor)
 @Controller('user')
 export class UserController {

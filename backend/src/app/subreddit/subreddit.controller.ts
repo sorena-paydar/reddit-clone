@@ -1,6 +1,5 @@
 import {
   Controller,
-  UseGuards,
   Get,
   Param,
   Post,
@@ -17,12 +16,10 @@ import {
 import { Member, Subreddit } from '@prisma/client';
 import { Public } from '../../common/decorators';
 import { Image, StandardResponse } from '../../common/types/standardResponse';
-import { GetUser } from '../auth/decorator';
-import { JwtGuard } from '../auth/guard/jwt.guard';
+import { Auth, GetUser } from '../auth/decorator';
 import { CreateSubredditDto, UpdateSubredditDto } from './dto';
 import { SubredditService } from './subreddit.service';
 import {
-  ApiBearerAuth,
   ApiTags,
   ApiOperation,
   ApiOkResponse,
@@ -47,9 +44,8 @@ import { diskStorage } from 'multer';
 import * as path from 'path';
 import { ApiFile } from '../user/decorator';
 
-@ApiBearerAuth()
+@Auth()
 @ApiTags('Subreddits')
-@UseGuards(JwtGuard)
 @Controller('r')
 export class SubredditController {
   constructor(private subredditService: SubredditService) {}
