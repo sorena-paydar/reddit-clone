@@ -4,7 +4,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Member, Subreddit } from '@prisma/client';
+import { Member, Prisma, Subreddit } from '@prisma/client';
 import { StandardResponse } from '../../common/types/standardResponse';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSubredditDto, UpdateSubredditDto } from './dto';
@@ -128,19 +128,18 @@ export class SubredditRepository {
   }
 
   /**
-   * Checks whether subreddit with given id exists or not.
-   * @param {subredditId} subredditId subreddit id
+   * Checks whether subreddit with given option exists or not.
+   * @param {Prisma.SubredditWhereUniqueInput} where subreddit unique field
    * @return {Promise<Subreddit>} return subreddit if it exists
    */
-  async exists(subredditId: string) {
-    const subreddit = await this.prisma.subreddit.findUnique({
-      where: { id: subredditId },
-    });
+  async exists(where: Prisma.SubredditWhereUniqueInput) {
+    const subreddit = await this.prisma.subreddit.findUnique({ where });
 
+    const { id, name } = where;
     // check if subreddit exists
     if (!subreddit) {
       throw new NotFoundException(
-        `Subreddit with id ${subredditId} was not found`,
+        `Subreddit with ${id ? `id ${id}` : `name ${name}`} was not found`,
       );
     }
 
@@ -208,7 +207,7 @@ export class SubredditRepository {
    * @return {Promise<void>} throw exception if user is the subreddit owner.
    */
   async isOwner(subredditId: string, userId: string): Promise<void> {
-    const subreddit = await this.exists(subredditId);
+    const subreddit = await this.exists({ id: subredditId });
 
     // check if user is the owner
     if (subreddit.userId === userId) {
@@ -265,7 +264,7 @@ export class SubredditRepository {
    */
   async hasPermission(userId: string, subredditId: string): Promise<void> {
     // get subreddit from db by id if it exists
-    const subreddit = await this.exists(subredditId);
+    const subreddit = await this.exists({ id: subredditId });
 
     // check if user the subreddit owner
     if (subreddit.userId !== userId) {

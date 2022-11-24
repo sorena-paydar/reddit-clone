@@ -96,7 +96,7 @@ export class SubredditService {
   async getSubredditMembers(
     subredditId: string,
   ): Promise<StandardResponse<Member[]>> {
-    await this.subreddits.exists(subredditId);
+    await this.subreddits.exists({ id: subredditId });
 
     return this.subreddits.members(subredditId);
   }
