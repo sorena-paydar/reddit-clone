@@ -40,6 +40,31 @@ CREATE TABLE "members" (
     CONSTRAINT "members_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "posts" (
+    "id" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "content" VARCHAR(3000),
+    "slug" TEXT NOT NULL,
+    "indentifier" VARCHAR(6) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "subreddit_id" TEXT NOT NULL,
+
+    CONSTRAINT "posts_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "images" (
+    "id" TEXT NOT NULL,
+    "image_url" TEXT NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "post_id" TEXT NOT NULL,
+
+    CONSTRAINT "images_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "users_id_key" ON "users"("id");
 
@@ -58,6 +83,15 @@ CREATE UNIQUE INDEX "subreddits_name_key" ON "subreddits"("name");
 -- CreateIndex
 CREATE UNIQUE INDEX "members_id_key" ON "members"("id");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "posts_id_key" ON "posts"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "posts_indentifier_key" ON "posts"("indentifier");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "images_id_key" ON "images"("id");
+
 -- AddForeignKey
 ALTER TABLE "subreddits" ADD CONSTRAINT "subreddits_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -66,3 +100,12 @@ ALTER TABLE "members" ADD CONSTRAINT "members_subreddit_id_fkey" FOREIGN KEY ("s
 
 -- AddForeignKey
 ALTER TABLE "members" ADD CONSTRAINT "members_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "posts" ADD CONSTRAINT "posts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "posts" ADD CONSTRAINT "posts_subreddit_id_fkey" FOREIGN KEY ("subreddit_id") REFERENCES "subreddits"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "images" ADD CONSTRAINT "images_post_id_fkey" FOREIGN KEY ("post_id") REFERENCES "posts"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

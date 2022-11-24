@@ -31,6 +31,7 @@ model User {
   updatedAt     DateTime    @updatedAt @map("updated_at")
   Subreddit     Subreddit[]
   Members       Member[]
+  Post          Post[]
 
   @@map("users")
 }
@@ -45,6 +46,7 @@ model Subreddit {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String   @map("user_id")
   Members     Member[]
+  Post        Post[]
 
   @@map("subreddits")
 }
@@ -57,4 +59,31 @@ model Member {
   userId      String    @map("user_id")
 
   @@map("members")
+}
+
+model Post {
+  id          String    @id @unique @default(uuid())
+  title       String
+  content     String?   @db.VarChar(3000)
+  slug        String
+  indentifier String    @unique @db.VarChar(6)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  user        User      @relation(fields: [userId], references: [id])
+  userId      String    @map("user_id")
+  subreddit   Subreddit @relation(fields: [subredditId], references: [id])
+  subredditId String    @map("subreddit_id")
+  Image       Image[]
+
+  @@map("posts")
+}
+
+model Image {
+  id        String   @id @unique @default(uuid())
+  imageUrl  String   @map("image_url")
+  createdAt DateTime @default(now()) @map("created_at")
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    String   @map("post_id")
+
+  @@map("images")
 }
