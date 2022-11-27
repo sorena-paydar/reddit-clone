@@ -46,7 +46,6 @@ CREATE TABLE "posts" (
     "title" TEXT NOT NULL,
     "content" VARCHAR(3000),
     "slug" TEXT NOT NULL,
-    "indentifier" VARCHAR(6) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "user_id" TEXT NOT NULL,
@@ -87,7 +86,7 @@ CREATE UNIQUE INDEX "members_id_key" ON "members"("id");
 CREATE UNIQUE INDEX "posts_id_key" ON "posts"("id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "posts_indentifier_key" ON "posts"("indentifier");
+CREATE UNIQUE INDEX "posts_slug_key" ON "posts"("slug");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "images_id_key" ON "images"("id");
@@ -102,10 +101,10 @@ ALTER TABLE "members" ADD CONSTRAINT "members_subreddit_id_fkey" FOREIGN KEY ("s
 ALTER TABLE "members" ADD CONSTRAINT "members_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "posts" ADD CONSTRAINT "posts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "posts" ADD CONSTRAINT "posts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "posts" ADD CONSTRAINT "posts_subreddit_id_fkey" FOREIGN KEY ("subreddit_id") REFERENCES "subreddits"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "posts" ADD CONSTRAINT "posts_subreddit_id_fkey" FOREIGN KEY ("subreddit_id") REFERENCES "subreddits"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "images" ADD CONSTRAINT "images_post_id_fkey" FOREIGN KEY ("post_id") REFERENCES "posts"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "images" ADD CONSTRAINT "images_post_id_fkey" FOREIGN KEY ("post_id") REFERENCES "posts"("id") ON DELETE CASCADE ON UPDATE CASCADE;

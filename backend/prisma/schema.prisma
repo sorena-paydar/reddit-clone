@@ -65,13 +65,12 @@ model Post {
   id          String    @id @unique @default(uuid())
   title       String
   content     String?   @db.VarChar(3000)
-  slug        String
-  indentifier String    @unique @db.VarChar(6)
+  slug        String    @unique
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
-  user        User      @relation(fields: [userId], references: [id])
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String    @map("user_id")
-  subreddit   Subreddit @relation(fields: [subredditId], references: [id])
+  subreddit   Subreddit @relation(fields: [subredditId], references: [id], onDelete: Cascade)
   subredditId String    @map("subreddit_id")
   Image       Image[]
 
@@ -82,7 +81,7 @@ model Image {
   id        String   @id @unique @default(uuid())
   imageUrl  String   @map("image_url")
   createdAt DateTime @default(now()) @map("created_at")
-  post      Post     @relation(fields: [postId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId    String   @map("post_id")
 
   @@map("images")
