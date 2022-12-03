@@ -55,13 +55,13 @@ CREATE TABLE "posts" (
 );
 
 -- CreateTable
-CREATE TABLE "images" (
+CREATE TABLE "medias" (
     "id" TEXT NOT NULL,
-    "image_url" TEXT NOT NULL,
+    "media_url" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "post_id" TEXT NOT NULL,
 
-    CONSTRAINT "images_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "medias_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -89,7 +89,7 @@ CREATE UNIQUE INDEX "posts_id_key" ON "posts"("id");
 CREATE UNIQUE INDEX "posts_slug_key" ON "posts"("slug");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "images_id_key" ON "images"("id");
+CREATE UNIQUE INDEX "medias_id_key" ON "medias"("id");
 
 -- AddForeignKey
 ALTER TABLE "subreddits" ADD CONSTRAINT "subreddits_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -107,4 +107,4 @@ ALTER TABLE "posts" ADD CONSTRAINT "posts_user_id_fkey" FOREIGN KEY ("user_id") 
 ALTER TABLE "posts" ADD CONSTRAINT "posts_subreddit_id_fkey" FOREIGN KEY ("subreddit_id") REFERENCES "subreddits"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "images" ADD CONSTRAINT "images_post_id_fkey" FOREIGN KEY ("post_id") REFERENCES "posts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "medias" ADD CONSTRAINT "medias_post_id_fkey" FOREIGN KEY ("post_id") REFERENCES "posts"("id") ON DELETE CASCADE ON UPDATE CASCADE;

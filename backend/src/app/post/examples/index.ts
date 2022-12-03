@@ -1,6 +1,6 @@
 import { Post } from '@prisma/client';
 import { StandardResponse } from '../../../common/types/standardResponse';
-import { randomString, createSlug } from '../../../common/utils';
+import { createSlug } from '../../../common/utils';
 import { SingleSubredditExample } from '../../subreddit/examples';
 import { SingleUserExample } from '../../user/examples';
 
@@ -10,7 +10,6 @@ const EXAMPLE_POST_1: ExamplePost = {
   id: '44e4c9f5-12d5-4ff9-815e-38285fe57254',
   title: 'Elimination of programmers',
   content: 'https://journal.media/elimination-of-programmers',
-  indentifier: randomString(6),
   slug: createSlug(
     'Elimination of programmers',
     {
@@ -31,7 +30,6 @@ const EXAMPLE_POST_2: ExamplePost = {
   title:
     'Machine Learning Roadmap - a linear learning path to become a Machine Learning Engineer',
   content: 'https://journal.media/elimination-of-programmers',
-  indentifier: randomString(6),
   slug: createSlug(
     'Machine Learning Roadmap - a linear learning path to become a Machine Learning Engineer',
     {

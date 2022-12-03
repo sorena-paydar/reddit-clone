@@ -72,17 +72,17 @@ model Post {
   userId      String    @map("user_id")
   subreddit   Subreddit @relation(fields: [subredditId], references: [id], onDelete: Cascade)
   subredditId String    @map("subreddit_id")
-  Image       Image[]
+  Media       Media[]
 
   @@map("posts")
 }
 
-model Image {
+model Media {
   id        String   @id @unique @default(uuid())
-  imageUrl  String   @map("image_url")
+  mediaUrl  String   @map("media_url")
   createdAt DateTime @default(now()) @map("created_at")
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId    String   @map("post_id")
 
-  @@map("images")
+  @@map("medias")
 }

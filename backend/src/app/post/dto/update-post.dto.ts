@@ -1,17 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
 
-export class CreatePostDto {
-  @ApiProperty({
-    example:
-      'Machine Learning Roadmap - a linear learning path to become a Machine Learning Engineer',
-  })
+export class UpdatePostDto {
+  @ApiProperty({ required: false, example: 'Elimination of programmers' })
   @IsString()
-  title: string;
+  @IsOptional()
+  title?: string;
 
   @ApiProperty({
-    example: 'https://journal.media/elimination-of-programmers',
     required: false,
+    example: 'https://journal.media/elimination-of-programmers',
   })
   @IsString()
   @IsOptional()
