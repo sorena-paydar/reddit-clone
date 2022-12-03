@@ -15,12 +15,12 @@ import { SubredditRepository } from './subreddit.repository';
 @Injectable({})
 export class SubredditService {
   constructor(
-    private subreddits: SubredditRepository,
+    private subredditRepository: SubredditRepository,
     private config: ConfigService,
   ) {}
 
   async getAllSubreddits(): Promise<StandardResponse<Subreddit[]>> {
-    return await this.subreddits.findAll();
+    return await this.subredditRepository.findAll();
   }
 
   async getUserSubreddits(
@@ -31,13 +31,13 @@ export class SubredditService {
       throw new NotFoundException();
     }
 
-    return this.subreddits.findAllByUserId(user.id);
+    return this.subredditRepository.findAllByUserId(user.id);
   }
 
   async getSubredditByName(
     subredditName: string,
   ): Promise<StandardResponse<Subreddit>> {
-    return this.subreddits.findOne(subredditName);
+    return this.subredditRepository.findOne(subredditName);
   }
 
   async createSubreddit(
@@ -46,7 +46,11 @@ export class SubredditService {
     avatar: Express.Multer.File,
   ): Promise<StandardResponse<Subreddit>> {
     try {
-      return await this.subreddits.create(userId, createSubredditDto, avatar);
+      return await this.subredditRepository.create(
+        userId,
+        createSubredditDto,
+        avatar,
+      );
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
@@ -63,10 +67,13 @@ export class SubredditService {
     userId: string,
     updateSubredditDto: UpdateSubredditDto,
   ): Promise<StandardResponse<Subreddit>> {
-    await this.subreddits.hasPermission(userId, subredditId);
+    await this.subredditRepository.hasPermission(userId, { id: subredditId });
 
     try {
-      return await this.subreddits.update(subredditId, updateSubredditDto);
+      return await this.subredditRepository.update(
+        subredditId,
+        updateSubredditDto,
+      );
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
@@ -82,9 +89,9 @@ export class SubredditService {
     subredditId: string,
     userId: string,
   ): Promise<StandardResponse<Subreddit>> {
-    await this.subreddits.hasPermission(userId, subredditId);
+    await this.subredditRepository.hasPermission(userId, { id: subredditId });
 
-    const data = await this.subreddits.delete(subredditId);
+    const data = await this.subredditRepository.delete(subredditId);
 
     if (data) return data;
 
@@ -96,17 +103,20 @@ export class SubredditService {
   async getSubredditMembers(
     subredditId: string,
   ): Promise<StandardResponse<Member[]>> {
-    await this.subreddits.exists({ id: subredditId });
+    await this.subredditRepository.exists({ id: subredditId });
 
-    return this.subreddits.members(subredditId);
+    return this.subredditRepository.members(subredditId);
   }
 
   async joinSubreddit(
     subredditId: string,
     userId: string,
   ): Promise<StandardResponse<Member>> {
-    await this.subreddits.isOwner(subredditId, userId);
-    const isMember = await this.subreddits.isMember(subredditId, userId);
+    await this.subredditRepository.isOwner(subredditId, userId);
+    const isMember = await this.subredditRepository.isMember(
+      subredditId,
+      userId,
+    );
 
     // check if user is already joined the subreddit
     if (isMember) {
@@ -115,16 +125,19 @@ export class SubredditService {
       );
     }
 
-    return this.subreddits.join(subredditId, userId);
+    return this.subredditRepository.join(subredditId, userId);
   }
 
   async leaveSubreddit(
     subredditId: string,
     userId: string,
   ): Promise<StandardResponse<Member>> {
-    await this.subreddits.isOwner(subredditId, userId);
+    await this.subredditRepository.isOwner(subredditId, userId);
 
-    const isMember = await this.subreddits.isMember(subredditId, userId);
+    const isMember = await this.subredditRepository.isMember(
+      subredditId,
+      userId,
+    );
 
     // check if user is not member of the subreddit
     if (!isMember) {
@@ -133,7 +146,7 @@ export class SubredditService {
       );
     }
 
-    return this.subreddits.leave(subredditId, userId);
+    return this.subredditRepository.leave(subredditId, userId);
   }
 
   async getUserJoinedSubreddits(
@@ -144,7 +157,7 @@ export class SubredditService {
       throw new NotFoundException();
     }
 
-    return this.subreddits.joinedSubreddits(user.id);
+    return this.subredditRepository.joinedSubreddits(user.id);
   }
 
   async uploadAvatar(
@@ -153,14 +166,15 @@ export class SubredditService {
     userId: string,
   ): Promise<StandardResponse<Image>> {
     // Get subreddit by name
-    const {
-      data: { id },
-    } = await this.subreddits.findOne(subredditName);
+    const subreddit = await this.subredditRepository.exists({
+      name: subredditName,
+    });
 
-    await this.subreddits.hasPermission(userId, id);
+    // Check if user is owner of the subreddit
+    await this.subredditRepository.hasPermission(userId, { id: subreddit.id });
 
     // Update subreddit by id
-    const { data } = await this.subreddits.update(id, {
+    const { data } = await this.subredditRepository.update(subreddit.id, {
       avatar: `${this.config.get('BASE_URL')}/static/${avatar.filename}`,
     });
 

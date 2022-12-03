@@ -20,6 +20,7 @@ export class SubredditRepository {
         _count: {
           select: {
             Members: true,
+            Post: true,
           },
         },
       },
@@ -41,7 +42,7 @@ export class SubredditRepository {
     // get user's subreddits
     const data = await this.prisma.subreddit.findMany({
       where: { userId },
-      include: { _count: { select: { Members: true } } },
+      include: { _count: { select: { Members: true, Post: true } } },
     });
 
     // get number of user's subreddits
@@ -62,15 +63,7 @@ export class SubredditRepository {
 
   async findOne(name: string): Promise<StandardResponse<Subreddit>> {
     // find subreddit by name
-    const subreddit = await this.prisma.subreddit.findFirst({
-      where: {
-        name,
-      },
-    });
-
-    if (!subreddit) {
-      throw new NotFoundException(`Subreddit not found`);
-    }
+    const subreddit = await this.exists({ name });
 
     return { success: true, data: subreddit };
   }
@@ -129,10 +122,10 @@ export class SubredditRepository {
 
   /**
    * Checks whether subreddit with given option exists or not.
-   * @param {Prisma.SubredditWhereUniqueInput} where subreddit unique field
+   * @param {Prisma.SubredditWhereUniqueInput} where - Subreddit unique field
    * @return {Promise<Subreddit>} return subreddit if it exists
    */
-  async exists(where: Prisma.SubredditWhereUniqueInput) {
+  async exists(where: Prisma.SubredditWhereUniqueInput): Promise<Subreddit> {
     const subreddit = await this.prisma.subreddit.findUnique({ where });
 
     const { id, name } = where;
@@ -257,18 +250,23 @@ export class SubredditRepository {
   }
 
   /**
-   * Checks whether user has the permission to continue or not.
+   * Checks whether user is subreddit owner or not.
    * @param {userId} userId - User id
-   * @param {subredditId} subredditId - Subreddit id
-   * @return {Promise<void>} Throw ForbiddenException if user does not have the permission.
+   * @param {Prisma.SubredditWhereUniqueInput} where - Subreddit unique field
+   * @return {Promise<Subreddit>} return subreddit.
    */
-  async hasPermission(userId: string, subredditId: string): Promise<void> {
-    // get subreddit from db by id if it exists
-    const subreddit = await this.exists({ id: subredditId });
+  async hasPermission(
+    userId: string,
+    where: Prisma.SubredditWhereUniqueInput,
+  ): Promise<Subreddit> {
+    // Get subreddit from db by unique inputs if it exists
+    const subreddit = await this.exists(where);
 
-    // check if user the subreddit owner
+    // Check if user the subreddit owner
     if (subreddit.userId !== userId) {
       throw new ForbiddenException('Access denied');
     }
+
+    return subreddit;
   }
 }

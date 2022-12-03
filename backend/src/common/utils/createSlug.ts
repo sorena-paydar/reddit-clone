@@ -1,4 +1,5 @@
 import slugify from 'slugify';
+import { randomString } from './randomString';
 
 interface Options {
   replacement?: string; // replace spaces with replacement character, defaults to `-`
@@ -10,7 +11,7 @@ interface Options {
 }
 
 /**
- * Create slug with given string and length.
+ * Create unique slug with random character and given string.
  * @param {string} - The string to be slugified
  * @param {number} [length=string.length] - The length of the slug
  * @param {Options} - Slugify options
@@ -20,4 +21,4 @@ export const createSlug = (
   string: string,
   options?: Options,
   length = string.length,
-): string => slugify(string.slice(0, length), options);
+): string => `${randomString(6)}_${slugify(string.slice(0, length), options)}`;

@@ -1,5 +1,5 @@
 import { User } from '@prisma/client';
-import { StandardResponse } from 'src/common/types/standardResponse';
+import { StandardResponse } from '../../../common/types/standardResponse';
 
 export const EXAMPLE_USER_ID = 'faf2c68b-b705-4f77-89c4-ed253bc4b22b';
 

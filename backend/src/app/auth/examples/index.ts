@@ -1,4 +1,7 @@
-import { StandardResponse, Token } from 'src/common/types/standardResponse';
+import {
+  StandardResponse,
+  Token,
+} from '../../../common/types/standardResponse';
 
 const EXAMPLE_AUTH: Token = {
   access_token:

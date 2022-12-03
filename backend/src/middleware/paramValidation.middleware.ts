@@ -5,7 +5,7 @@ import {
   CallHandler,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { checkUsername } from '../common/utils/checkUsername';
+import { checkUserParam } from '../common/utils';
 import { User } from '@prisma/client';
 
 @Injectable()
@@ -18,7 +18,7 @@ export class ParamValidationInterceptor implements NestInterceptor {
     };
 
     // Check username in request param
-    checkUsername(req.params.username, req.user);
+    checkUserParam(req.params, req.user);
 
     return next.handle();
   }
