@@ -66,7 +66,7 @@ export class PostRepository {
         ({ filename }) =>
           ({
             postId: post.id,
-            mediaUrl: `${this.config.get('BASE_URL')}/static/${filename}`,
+            mediaUrl: `posts/${filename}`,
           } as Media),
       ),
     });

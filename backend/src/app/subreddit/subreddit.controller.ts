@@ -308,11 +308,10 @@ export class SubredditController {
           name: string;
         };
       };
-
       // Return the options
       return {
         storage: diskStorage({
-          destination: './media',
+          destination: `./media/subreddits/${req.params.name}/avatar`,
 
           filename: (_req, file, cb) => {
             const fileExtension = path.extname(file.originalname);

@@ -3,17 +3,13 @@ import { User } from '@prisma/client';
 import { Image, StandardResponse } from '../../common/types/standardResponse';
 import { UpdateUserDto } from './dto';
 import { UserRepository } from './user.repository';
-import { ConfigService } from '@nestjs/config';
 
 @Injectable({})
 export class UserService {
-  constructor(
-    private repository: UserRepository,
-    private config: ConfigService,
-  ) {}
+  constructor(private userRepository: UserRepository) {}
 
   async me(username: string): Promise<StandardResponse<User>> {
-    return this.repository.findOne(username);
+    return this.userRepository.findOne(username);
   }
 
   async update(
@@ -21,7 +17,7 @@ export class UserService {
     updateUserDto: UpdateUserDto,
   ): Promise<StandardResponse<User>> {
     try {
-      return await this.repository.update(username, updateUserDto);
+      return await this.userRepository.update(username, updateUserDto);
     } catch (err) {
       const {
         meta: { target },
@@ -35,8 +31,8 @@ export class UserService {
     avatar: Express.Multer.File,
     username: string,
   ): Promise<StandardResponse<Image>> {
-    const { data } = await this.repository.update(username, {
-      avatar: `${this.config.get('BASE_URL')}/static/${avatar.filename}`,
+    const { data } = await this.userRepository.update(username, {
+      avatar: `users/${username}/avatar/${avatar.filename}`,
     });
 
     return { success: true, data: { imageUrl: data.avatar } };

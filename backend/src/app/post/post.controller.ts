@@ -35,6 +35,7 @@ import { AllPostsExample, SinglePostExample } from './examples';
 import { diskStorage } from 'multer';
 import * as path from 'path';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { UploadMultiFileInterceptor } from '../../middleware';
 
 @Auth()
 @ApiTags('Posts')
@@ -95,16 +96,19 @@ export class PostController {
     summary: 'Create a new post',
   })
   @UseInterceptors(
-    FilesInterceptor('medias', 10, {
-      storage: diskStorage({
-        destination: './media',
+    UploadMultiFileInterceptor('medias', 10, (ctx) => {
+      // Return the options
+      return {
+        storage: diskStorage({
+          destination: './media/posts',
 
-        filename: (_req, file, cb) => {
-          const fileExtension = path.extname(file.originalname);
+          filename: (_req, file, cb) => {
+            const fileExtension = path.extname(file.originalname);
 
-          return cb(null, `${getDate()}_${randomString(16)}${fileExtension}`);
-        },
-      }),
+            return cb(null, `${getDate()}_${randomString(16)}${fileExtension}`);
+          },
+        }),
+      };
     }),
   )
   createPost(
@@ -139,16 +143,19 @@ export class PostController {
     summary: 'Update post by slug',
   })
   @UseInterceptors(
-    FilesInterceptor('medias', 10, {
-      storage: diskStorage({
-        destination: './media',
+    UploadMultiFileInterceptor('medias', 10, (ctx) => {
+      // Return the options
+      return {
+        storage: diskStorage({
+          destination: './media/posts',
 
-        filename: (_req, file, cb) => {
-          const fileExtension = path.extname(file.originalname);
+          filename: (_req, file, cb) => {
+            const fileExtension = path.extname(file.originalname);
 
-          return cb(null, `${getDate()}_${randomString(16)}${fileExtension}`);
-        },
-      }),
+            return cb(null, `${getDate()}_${randomString(16)}${fileExtension}`);
+          },
+        }),
+      };
     }),
   )
   updatePostBySlug(

@@ -175,7 +175,7 @@ export class SubredditService {
 
     // Update subreddit by id
     const { data } = await this.subredditRepository.update(subreddit.id, {
-      avatar: `${this.config.get('BASE_URL')}/static/${avatar.filename}`,
+      avatar: `subreddits/${subredditName}/avatar/${avatar.filename}`,
     });
 
     return { success: true, data: { imageUrl: data.avatar } };

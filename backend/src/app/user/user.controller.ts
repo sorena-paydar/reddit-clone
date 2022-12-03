@@ -142,7 +142,7 @@ export class UserController {
       // Return the options
       return {
         storage: diskStorage({
-          destination: './media',
+          destination: `./media/users/${req.params.username}/avatar`,
 
           filename: (_req, file, cb) => {
             const fileExtension = path.extname(file.originalname);
