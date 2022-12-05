@@ -39,4 +39,4 @@ lerna-debug.log*
 
 docker-compose.yml
 
-media
+/media
