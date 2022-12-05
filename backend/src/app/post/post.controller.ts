@@ -129,7 +129,7 @@ export class PostController {
   @ApiBody({
     type: UpdatePostDto,
   })
-  @ApiCreatedResponse({
+  @ApiOkResponse({
     schema: createSchema(SinglePostExample),
   })
   @ApiNotFoundResponse({
@@ -175,9 +175,7 @@ export class PostController {
 
   @HttpCode(HttpStatus.NO_CONTENT)
   @Delete('post/:id')
-  @ApiNoContentResponse({
-    schema: createSchema(SinglePostExample),
-  })
+  @ApiNoContentResponse({ description: 'No Content' })
   @ApiForbiddenResponse({
     description: 'User is not post submitter',
   })

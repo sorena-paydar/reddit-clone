@@ -15,7 +15,7 @@ export class SubredditRepository {
 
   async findAll(): Promise<StandardResponse<Subreddit[]>> {
     // get all subreddits
-    const data = await this.prisma.subreddit.findMany({
+    const findSubreddits = this.prisma.subreddit.findMany({
       include: {
         _count: {
           select: {
@@ -27,12 +27,17 @@ export class SubredditRepository {
     });
 
     // get number of all subreddits
-    const count = await this.prisma.subreddit.count();
+    const countSubreddits = this.prisma.subreddit.count();
+
+    const [subreddits, totalSubreddits] = await this.prisma.$transaction([
+      findSubreddits,
+      countSubreddits,
+    ]);
 
     return {
       success: true,
-      data,
-      count,
+      data: subreddits,
+      count: totalSubreddits,
     };
   }
 
@@ -40,13 +45,13 @@ export class SubredditRepository {
     userId: string,
   ): Promise<StandardResponse<Subreddit[]>> {
     // get user's subreddits
-    const data = await this.prisma.subreddit.findMany({
+    const findSubredditsByUserId = this.prisma.subreddit.findMany({
       where: { userId },
       include: { _count: { select: { Members: true, Post: true } } },
     });
 
     // get number of user's subreddits
-    const count = await this.prisma.subreddit.count({
+    const countSubredditsByUserId = this.prisma.subreddit.count({
       where: {
         user: {
           id: userId,
@@ -54,10 +59,15 @@ export class SubredditRepository {
       },
     });
 
+    const [subreddists, totalSubreddits] = await this.prisma.$transaction([
+      findSubredditsByUserId,
+      countSubredditsByUserId,
+    ]);
+
     return {
       success: true,
-      data,
-      count,
+      data: subreddists,
+      count: totalSubreddits,
     };
   }
 

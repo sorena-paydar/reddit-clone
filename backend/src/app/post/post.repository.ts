@@ -15,7 +15,7 @@ export class PostRepository {
 
   async findAll(subredditId: string): Promise<StandardResponse<Post[]>> {
     // Get all posts of subreddit with given id
-    const data = await this.prisma.post.findMany({
+    const findPosts = this.prisma.post.findMany({
       where: { subredditId },
       include: {
         Media: {
@@ -28,9 +28,14 @@ export class PostRepository {
     });
 
     // Get posts count
-    const count = await this.prisma.post.count({ where: { subredditId } });
+    const countPosts = this.prisma.post.count({ where: { subredditId } });
 
-    return { success: true, data, count };
+    const [posts, totalPosts] = await this.prisma.$transaction([
+      findPosts,
+      countPosts,
+    ]);
+
+    return { success: true, data: posts, count: totalPosts };
   }
 
   async findOne(
