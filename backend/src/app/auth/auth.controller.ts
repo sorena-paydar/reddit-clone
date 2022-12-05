@@ -13,6 +13,7 @@ import {
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiUnauthorizedResponse,
+  ApiBadRequestResponse,
 } from '@nestjs/swagger';
 import { createSchema } from '../../common/utils';
 import { AuthExample } from './examples';
@@ -30,6 +31,9 @@ export class AuthController {
     schema: createSchema(AuthExample),
   })
   @ApiForbiddenResponse({ description: 'Credentials taken' })
+  @ApiBadRequestResponse({
+    description: 'Username must not contain whitespace',
+  })
   @ApiOperation({ summary: 'Register user' })
   register(@Body() dto: RegisterDto): Promise<StandardResponse<Token>> {
     return this.authService.register(dto);

@@ -73,6 +73,9 @@ export class UserController {
   @ApiForbiddenResponse({
     description: '{username} is not available',
   })
+  @ApiBadRequestResponse({
+    description: 'Username must not contain whitespace',
+  })
   @ApiOperation({ summary: 'Update user by username' })
   update(
     @Param('username') username: string,

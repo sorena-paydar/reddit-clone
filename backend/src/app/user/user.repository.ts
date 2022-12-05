@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { StandardResponse } from '../../common/types/standardResponse';
 import { PrismaService } from '../prisma/prisma.service';
 import * as argon from 'argon2';
 import { UpdateUserDto } from './dto';
+import { hasWhiteSpace } from '../../common/utils';
 
 @Injectable()
 export class UserRepository {
@@ -23,6 +24,11 @@ export class UserRepository {
     username: string,
     updateUserDto: UpdateUserDto,
   ): Promise<StandardResponse<User>> {
+    // Check if username has whitespace
+    if (hasWhiteSpace(updateUserDto.username)) {
+      throw new BadRequestException('Username must not contain whitespace');
+    }
+
     let hash: string;
 
     if (updateUserDto.password) hash = await argon.hash(updateUserDto.password);

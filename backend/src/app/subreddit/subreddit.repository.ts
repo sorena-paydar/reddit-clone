@@ -2,10 +2,12 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Member, Prisma, Subreddit } from '@prisma/client';
 import { StandardResponse } from '../../common/types/standardResponse';
+import { hasWhiteSpace } from '../../common/utils';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSubredditDto, UpdateSubredditDto } from './dto';
 
@@ -83,6 +85,13 @@ export class SubredditRepository {
     createSubredditDto: CreateSubredditDto,
     avatar: Express.Multer.File,
   ): Promise<StandardResponse<Subreddit>> {
+    // Check if subreddit name has whitespace
+    if (hasWhiteSpace(createSubredditDto.name)) {
+      throw new BadRequestException(
+        'Subreddit name must not contain whitespace',
+      );
+    }
+
     // Check if avatar is null
     const subredditAvatar = avatar
       ? `${this.config.get('BASE_URL')}/static/${avatar.filename}`
@@ -109,6 +118,12 @@ export class SubredditRepository {
     subredditId: string,
     updateSubredditDto: UpdateSubredditDto,
   ): Promise<StandardResponse<Subreddit>> {
+    if (hasWhiteSpace(updateSubredditDto.name)) {
+      throw new BadRequestException(
+        'Subreddit name must not contain whitespace',
+      );
+    }
+
     // update subreddit
     const subreddit = await this.prisma.subreddit.update({
       where: {

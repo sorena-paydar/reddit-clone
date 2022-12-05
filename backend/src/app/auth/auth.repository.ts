@@ -1,5 +1,5 @@
 import {
-  ForbiddenException,
+  BadRequestException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto, RegisterDto } from './dto';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
+import { hasWhiteSpace } from '../../common/utils';
 
 @Injectable()
 export class AuthRepository {
@@ -21,6 +21,11 @@ export class AuthRepository {
   ) {}
 
   async create(dto: RegisterDto): Promise<StandardResponse<Token>> {
+    // Check if username has whitespace
+    if (hasWhiteSpace(dto.username)) {
+      throw new BadRequestException('Username must not contain whitespace');
+    }
+
     const hash = await argon.hash(dto.password);
 
     const user = await this.prisma.user.create({

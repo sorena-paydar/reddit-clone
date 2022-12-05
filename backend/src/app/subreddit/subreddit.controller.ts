@@ -86,6 +86,9 @@ export class SubredditController {
   @ApiConflictResponse({
     description: '{name} is taken',
   })
+  @ApiBadRequestResponse({
+    description: 'Subreddit name must not contain whitespace',
+  })
   @ApiOperation({ summary: 'Create new subreddit' })
   @UseInterceptors(
     UploadFileInterceptor('avatar', (ctx) => {
@@ -152,6 +155,9 @@ export class SubredditController {
   })
   @ApiConflictResponse({
     description: '{name} is taken',
+  })
+  @ApiBadRequestResponse({
+    description: 'Subreddit name must not contain whitespace',
   })
   @ApiOperation({ summary: 'Update subreddit by id' })
   @UseInterceptors(
