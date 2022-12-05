@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsArray, IsOptional, IsString } from 'class-validator';
 
 export class UpdatePostDto {
   @ApiProperty({ required: false, example: 'Elimination of programmers' })
@@ -23,10 +23,7 @@ export class UpdatePostDto {
       format: 'binary',
     },
   })
-  @IsString()
+  @IsArray()
   @IsOptional()
-  medias?: {
-    type: 'string';
-    format: 'binary';
-  }[];
+  medias?: any[];
 }

@@ -34,7 +34,6 @@ import { StandardResponse } from '../../common/types/standardResponse';
 import { AllPostsExample, SinglePostExample } from './examples';
 import { diskStorage } from 'multer';
 import * as path from 'path';
-import { FilesInterceptor } from '@nestjs/platform-express';
 import { UploadMultiFileInterceptor } from '../../middleware';
 
 @Auth()
@@ -163,12 +162,14 @@ export class PostController {
     @GetUser('id') userId: string,
     @Param('slug') slug: string,
     @Body() updatePostDto: UpdatePostDto,
+    @UploadedFiles() medias: Array<Express.Multer.File>,
   ) {
     return this.postService.updatePostBySlug(
       userId,
       subredditName,
       slug,
       updatePostDto,
+      medias,
     );
   }
 

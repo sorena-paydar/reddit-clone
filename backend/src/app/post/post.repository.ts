@@ -3,7 +3,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Media, Post, Prisma } from '@prisma/client';
 import { StandardResponse } from '../../common/types/standardResponse';
 import { createSlug } from '../../common/utils';
@@ -12,11 +11,21 @@ import { CreatePostDto, UpdatePostDto } from './dto';
 
 @Injectable()
 export class PostRepository {
-  constructor(private prisma: PrismaService, private config: ConfigService) {}
+  constructor(private prisma: PrismaService) {}
 
   async findAll(subredditId: string): Promise<StandardResponse<Post[]>> {
     // Get all posts of subreddit with given id
-    const data = await this.prisma.post.findMany({ where: { subredditId } });
+    const data = await this.prisma.post.findMany({
+      where: { subredditId },
+      include: {
+        Media: {
+          select: {
+            mediaUrl: true,
+            createdAt: true,
+          },
+        },
+      },
+    });
 
     // Get posts count
     const count = await this.prisma.post.count({ where: { subredditId } });
@@ -52,6 +61,15 @@ export class PostRepository {
 
     // Create post
     const post = await this.prisma.post.create({
+      include: {
+        Media: {
+          select: {
+            mediaUrl: true,
+            createdAt: true,
+          },
+        },
+        // TODO: add other related fields e.g votes and comments
+      },
       data: {
         userId,
         subredditId,
@@ -61,27 +79,33 @@ export class PostRepository {
     });
 
     // Create media
-    await this.prisma.media.createMany({
-      data: medias.map(
-        ({ filename }) =>
-          ({
-            postId: post.id,
-            mediaUrl: `posts/${filename}`,
-          } as Media),
-      ),
-    });
+    if (medias)
+      await this.prisma.media.createMany({
+        data: medias?.map(
+          ({ filename }) =>
+            ({
+              postId: post.id,
+              mediaUrl: `posts/${filename}`,
+            } as Media),
+        ),
+      });
 
-    return { success: true, data: post };
+    // Find and return the created post
+    return await this.findOne(subredditId, slug);
   }
 
   async update(
     slug: string,
     updatePostDto: UpdatePostDto,
+    medias: Array<Express.Multer.File>,
   ): Promise<StandardResponse<Post>> {
-    let newSlug: string;
+    // Get post by slug
+    const postFromDb = await this.exists({ slug });
 
     // Create new slug if title has been updated
-    if (updatePostDto.title)
+    let newSlug: string;
+
+    if (updatePostDto.title !== postFromDb.title)
       newSlug = createSlug(
         updatePostDto.title,
         {
@@ -92,7 +116,34 @@ export class PostRepository {
         42,
       );
 
-    const data = await this.prisma.post.update({
+    // Delete previous post media
+    await this.prisma.media.deleteMany({
+      where: { postId: postFromDb.id },
+    });
+
+    // Create new media
+    if (medias)
+      await this.prisma.media.createMany({
+        data: medias?.map(
+          ({ filename }) =>
+            ({
+              postId: postFromDb.id,
+              mediaUrl: `posts/${filename}`,
+            } as Media),
+        ),
+      });
+
+    // Update post
+    const post = await this.prisma.post.update({
+      include: {
+        Media: {
+          select: {
+            mediaUrl: true,
+            createdAt: true,
+          },
+        },
+        // TODO: add other related fields e.g votes and comments
+      },
       where: { slug },
       data: {
         ...updatePostDto,
@@ -100,7 +151,7 @@ export class PostRepository {
       },
     });
 
-    return { success: true, data };
+    return { success: true, data: post };
   }
 
   async delete(subredditId: string): Promise<StandardResponse<Post>> {
@@ -123,6 +174,7 @@ export class PostRepository {
         Media: {
           select: {
             mediaUrl: true,
+            createdAt: true,
           },
         },
       },

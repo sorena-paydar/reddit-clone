@@ -74,6 +74,7 @@ export class PostService {
     subredditName: string,
     slug: string,
     updatePostDto: UpdatePostDto,
+    medias: Array<Express.Multer.File>,
   ) {
     // Get surbeddit by name
     const subreddit = await this.subredditRepository.exists({
@@ -91,7 +92,7 @@ export class PostService {
       throw new ForbiddenException('User is not the post submitter');
     }
 
-    return this.postRepository.update(slug, updatePostDto);
+    return this.postRepository.update(slug, updatePostDto, medias);
   }
 
   async deletePostById(
