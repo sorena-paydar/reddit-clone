@@ -99,16 +99,27 @@ export class SubredditRepository {
 
     // create subreddit
     const subreddit = await this.prisma.subreddit.create({
+      include: {
+        _count: {
+          select: {
+            members: true,
+            posts: true,
+          },
+        },
+      },
+
       data: {
         userId,
         ...createSubredditDto,
         avatar: subredditAvatar,
-      },
-    });
 
-    // add owner to member tabel
-    await this.prisma.member.create({
-      data: { userId, subredditId: subreddit.id },
+        // Add owner to members
+        members: {
+          create: {
+            userId,
+          },
+        },
+      },
     });
 
     return { success: true, data: subreddit };
@@ -151,7 +162,10 @@ export class SubredditRepository {
    * @return {Promise<Subreddit>} return subreddit if it exists
    */
   async exists(where: Prisma.SubredditWhereUniqueInput): Promise<Subreddit> {
-    const subreddit = await this.prisma.subreddit.findUnique({ where });
+    const subreddit = await this.prisma.subreddit.findUnique({
+      include: { _count: { select: { members: true, posts: true } } },
+      where,
+    });
 
     const { id, name } = where;
     // check if subreddit exists
@@ -182,7 +196,7 @@ export class SubredditRepository {
   async join(
     subredditId: string,
     userId: string,
-  ): Promise<StandardResponse<Member>> {
+  ): Promise<StandardResponse<Subreddit>> {
     const data = await this.prisma.member.create({
       data: {
         subredditId,
@@ -190,16 +204,22 @@ export class SubredditRepository {
       },
     });
 
+    if (!data) {
+      throw new BadRequestException('Could not join the subreddit');
+    }
+
+    const subreddit = await this.exists({ id: subredditId });
+
     return {
       success: true,
-      data,
+      data: subreddit,
     };
   }
 
   async leave(
     subredditId: string,
     userId: string,
-  ): Promise<StandardResponse<Member>> {
+  ): Promise<StandardResponse<Subreddit>> {
     // find member id by subreddit id and user id
     const { id } = await this.prisma.member.findFirst({
       where: { subredditId, userId },
@@ -212,9 +232,15 @@ export class SubredditRepository {
       },
     });
 
+    if (!data) {
+      throw new BadRequestException('Could not leave the subreddit');
+    }
+
+    const subreddit = await this.exists({ id: subredditId });
+
     return {
       success: true,
-      data,
+      data: subreddit,
     };
   }
 

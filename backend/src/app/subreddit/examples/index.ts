@@ -2,7 +2,12 @@ import { Member, Subreddit } from '@prisma/client';
 import { StandardResponse } from '../../../common/types/standardResponse';
 import { EXAMPLE_USER_ID } from '../../user/examples';
 
-type ExampleSubreddit = Subreddit & { _count: { Members: number } };
+type ExampleSubreddit = Subreddit & {
+  _count: {
+    members?: number;
+    posts?: number;
+  };
+};
 
 const EXAMPLE_SUBREDDIT_1: ExampleSubreddit = {
   id: '78961915-3eb8-43e9-8702-d409e5ecdf20',
@@ -12,7 +17,8 @@ const EXAMPLE_SUBREDDIT_1: ExampleSubreddit = {
   createdAt: new Date('2022-11-15T10:46:29.640Z'),
   updatedAt: new Date('2022-11-15T10:46:46.640Z'),
   userId: EXAMPLE_USER_ID,
-  _count: { Members: 1 },
+
+  _count: { members: 1, posts: 0 },
 };
 
 const EXAMPLE_SUBREDDIT_2: ExampleSubreddit = {
@@ -23,7 +29,7 @@ const EXAMPLE_SUBREDDIT_2: ExampleSubreddit = {
   createdAt: new Date('2022-11-15T10:48:29.640Z'),
   updatedAt: new Date('2022-11-15T10:50:14.640Z'),
   userId: '8a87f71a-1192-4ae8-8f74-88311c136486',
-  _count: { Members: 1 },
+  _count: { members: 1, posts: 0 },
 };
 
 export const AllUserSubredditsExample: StandardResponse<Subreddit[]> = {

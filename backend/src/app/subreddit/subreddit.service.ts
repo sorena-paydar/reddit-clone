@@ -111,7 +111,7 @@ export class SubredditService {
   async joinSubreddit(
     subredditId: string,
     userId: string,
-  ): Promise<StandardResponse<Member>> {
+  ): Promise<StandardResponse<Subreddit>> {
     await this.subredditRepository.isOwner(subredditId, userId);
     const isMember = await this.subredditRepository.isMember(
       subredditId,
@@ -131,7 +131,7 @@ export class SubredditService {
   async leaveSubreddit(
     subredditId: string,
     userId: string,
-  ): Promise<StandardResponse<Member>> {
+  ): Promise<StandardResponse<Subreddit>> {
     await this.subredditRepository.isOwner(subredditId, userId);
 
     const isMember = await this.subredditRepository.isMember(

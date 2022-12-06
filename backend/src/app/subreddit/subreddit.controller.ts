@@ -262,7 +262,7 @@ export class SubredditController {
   joinSubreddit(
     @Param('id') subredditId: string,
     @GetUser('id') userId: string,
-  ): Promise<StandardResponse<Member>> {
+  ): Promise<StandardResponse<Subreddit>> {
     return this.subredditService.joinSubreddit(subredditId, userId);
   }
 
@@ -284,7 +284,7 @@ export class SubredditController {
   leaveSubreddit(
     @Param('id') subredditId: string,
     @GetUser('id') userId: string,
-  ): Promise<StandardResponse<Member>> {
+  ): Promise<StandardResponse<Subreddit>> {
     return this.subredditService.leaveSubreddit(subredditId, userId);
   }
 
