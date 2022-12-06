@@ -29,9 +29,9 @@ model User {
   emailVerified Boolean     @default(false) @map("email_verified")
   createdAt     DateTime    @default(now()) @map("created_at")
   updatedAt     DateTime    @updatedAt @map("updated_at")
-  Subreddit     Subreddit[]
-  Members       Member[]
-  Post          Post[]
+  subreddits    Subreddit[]
+  members       Member[]
+  posts         Post[]
 
   @@map("users")
 }
@@ -45,8 +45,8 @@ model Subreddit {
   updatedAt   DateTime @updatedAt @map("updated_at")
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String   @map("user_id")
-  Members     Member[]
-  Post        Post[]
+  members     Member[]
+  posts       Post[]
 
   @@map("subreddits")
 }
@@ -72,7 +72,7 @@ model Post {
   userId      String    @map("user_id")
   subreddit   Subreddit @relation(fields: [subredditId], references: [id], onDelete: Cascade)
   subredditId String    @map("subreddit_id")
-  Media       Media[]
+  medias      Media[]
 
   @@map("posts")
 }

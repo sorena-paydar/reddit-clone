@@ -21,8 +21,8 @@ export class SubredditRepository {
       include: {
         _count: {
           select: {
-            Members: true,
-            Post: true,
+            members: true,
+            posts: true,
           },
         },
       },
@@ -49,7 +49,7 @@ export class SubredditRepository {
     // get user's subreddits
     const findSubredditsByUserId = this.prisma.subreddit.findMany({
       where: { userId },
-      include: { _count: { select: { Members: true, Post: true } } },
+      include: { _count: { select: { members: true, posts: true } } },
     });
 
     // get number of user's subreddits
@@ -252,7 +252,7 @@ export class SubredditRepository {
   ): Promise<StandardResponse<Subreddit[]>> {
     const data = await this.prisma.subreddit.findMany({
       where: {
-        Members: {
+        members: {
           some: {
             userId,
           },
@@ -261,7 +261,7 @@ export class SubredditRepository {
       include: {
         _count: {
           select: {
-            Members: true,
+            members: true,
           },
         },
       },

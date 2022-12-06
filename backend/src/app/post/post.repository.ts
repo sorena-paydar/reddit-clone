@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Media, Post, Prisma } from '@prisma/client';
+import { Post, Prisma } from '@prisma/client';
 import { StandardResponse } from '../../common/types/standardResponse';
 import { createSlug } from '../../common/utils';
 import { PrismaService } from '../prisma/prisma.service';
@@ -18,7 +18,7 @@ export class PostRepository {
     const findPosts = this.prisma.post.findMany({
       where: { subredditId },
       include: {
-        Media: {
+        medias: {
           select: {
             mediaUrl: true,
             createdAt: true,
@@ -67,7 +67,7 @@ export class PostRepository {
     // Create post
     const post = await this.prisma.post.create({
       include: {
-        Media: {
+        medias: {
           select: {
             mediaUrl: true,
             createdAt: true,
@@ -80,23 +80,19 @@ export class PostRepository {
         subredditId,
         ...createPostDto,
         slug,
+
+        // Create media
+        medias: {
+          createMany: {
+            data: medias?.map((media) => ({
+              mediaUrl: `posts/${media.filename}`,
+            })),
+          },
+        },
       },
     });
 
-    // Create media
-    if (medias)
-      await this.prisma.media.createMany({
-        data: medias?.map(
-          ({ filename }) =>
-            ({
-              postId: post.id,
-              mediaUrl: `posts/${filename}`,
-            } as Media),
-        ),
-      });
-
-    // Find and return the created post
-    return await this.findOne(subredditId, slug);
+    return { success: true, data: post };
   }
 
   async update(
@@ -121,27 +117,10 @@ export class PostRepository {
         42,
       );
 
-    // Delete previous post media
-    await this.prisma.media.deleteMany({
-      where: { postId: postFromDb.id },
-    });
-
-    // Create new media
-    if (medias)
-      await this.prisma.media.createMany({
-        data: medias?.map(
-          ({ filename }) =>
-            ({
-              postId: postFromDb.id,
-              mediaUrl: `posts/${filename}`,
-            } as Media),
-        ),
-      });
-
     // Update post
     const post = await this.prisma.post.update({
       include: {
-        Media: {
+        medias: {
           select: {
             mediaUrl: true,
             createdAt: true,
@@ -153,6 +132,20 @@ export class PostRepository {
       data: {
         ...updatePostDto,
         ...(newSlug && { slug: newSlug }),
+
+        // Update media
+        medias: {
+          // Delete Previous post media
+          deleteMany: {
+            postId: postFromDb.id,
+          },
+          // Create new media
+          createMany: {
+            data: medias?.map(({ filename }) => ({
+              mediaUrl: `posts/${filename}`,
+            })),
+          },
+        },
       },
     });
 
@@ -176,7 +169,7 @@ export class PostRepository {
     const post = await this.prisma.post.findFirst({
       where,
       include: {
-        Media: {
+        medias: {
           select: {
             mediaUrl: true,
             createdAt: true,

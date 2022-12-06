@@ -163,7 +163,7 @@ export class PostController {
     @Param('slug') slug: string,
     @Body() updatePostDto: UpdatePostDto,
     @UploadedFiles() medias: Array<Express.Multer.File>,
-  ) {
+  ): Promise<StandardResponse<Prisma.Post>> {
     return this.postService.updatePostBySlug(
       userId,
       subredditName,

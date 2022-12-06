@@ -75,7 +75,7 @@ export class PostService {
     slug: string,
     updatePostDto: UpdatePostDto,
     medias: Array<Express.Multer.File>,
-  ) {
+  ): Promise<StandardResponse<Post>> {
     // Get surbeddit by name
     const subreddit = await this.subredditRepository.exists({
       name: subredditName,
