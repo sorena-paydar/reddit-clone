@@ -2,7 +2,8 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["filteredRelationCount"]
 }
 
 datasource db {
@@ -32,6 +33,7 @@ model User {
   subreddits    Subreddit[]
   members       Member[]
   posts         Post[]
+  postVote      PostVote[]
 
   @@map("users")
 }
@@ -62,17 +64,20 @@ model Member {
 }
 
 model Post {
-  id          String    @id @unique @default(uuid())
+  id          String     @id @unique @default(uuid())
   title       String
-  content     String?   @db.VarChar(3000)
-  slug        String    @unique
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId      String    @map("user_id")
-  subreddit   Subreddit @relation(fields: [subredditId], references: [id], onDelete: Cascade)
-  subredditId String    @map("subreddit_id")
+  content     String?    @db.VarChar(3000)
+  slug        String     @unique
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String     @map("user_id")
+  subreddit   Subreddit  @relation(fields: [subredditId], references: [id], onDelete: Cascade)
+  subredditId String     @map("subreddit_id")
   medias      Media[]
+  postVotes   PostVote[]
+  upvotes     Int        @default(0)
+  downvotes   Int        @default(0)
 
   @@map("posts")
 }
@@ -85,4 +90,16 @@ model Media {
   postId    String   @map("post_id")
 
   @@map("medias")
+}
+
+model PostVote {
+  id        String   @id @unique @default(uuid())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    String   @map("post_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @map("user_id")
+  score     Boolean
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("post_votes")
 }

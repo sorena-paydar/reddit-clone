@@ -5,7 +5,7 @@ import { SingleSubredditExample } from '../../subreddit/examples';
 import { SingleUserExample } from '../../user/examples';
 
 type ExamplePost = Post & {
-  Media: Media[];
+  medias: Media[];
 };
 
 const EXAMPLE_POST_1: ExamplePost = {
@@ -23,7 +23,11 @@ const EXAMPLE_POST_1: ExamplePost = {
   ),
   subredditId: SingleSubredditExample.data.id,
   userId: SingleUserExample.data.id,
-  Media: [
+  createdAt: new Date('2022-11-24T15:55:38.968Z'),
+  updatedAt: new Date('2022-11-24T15:55:43.968Z'),
+  upvotes: 4,
+  downvotes: 13,
+  medias: [
     {
       id: '57a964e5-926a-40fc-8b3b-175d5672bf97',
       mediaUrl: 'posts/filename.png',
@@ -31,8 +35,6 @@ const EXAMPLE_POST_1: ExamplePost = {
       postId: '44e4c9f5-12d5-4ff9-815e-38285fe57254',
     },
   ],
-  createdAt: new Date('2022-11-24T15:55:38.968Z'),
-  updatedAt: new Date('2022-11-24T15:55:43.968Z'),
 };
 
 const EXAMPLE_POST_2: ExamplePost = {
@@ -51,9 +53,11 @@ const EXAMPLE_POST_2: ExamplePost = {
   ),
   subredditId: SingleSubredditExample.data.id,
   userId: '2fd1f161-8f6c-4072-ab5c-f6a86af9c970',
-  Media: [],
   createdAt: new Date('2022-11-24T15:57:21.968Z'),
   updatedAt: new Date('2022-11-24T15:58:02.968Z'),
+  upvotes: 24,
+  downvotes: 6,
+  medias: [],
 };
 
 export const AllUserPostsExample: StandardResponse<ExamplePost[]> = {

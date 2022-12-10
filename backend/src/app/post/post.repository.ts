@@ -3,8 +3,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Post, Prisma } from '@prisma/client';
+import { Post, PostVote, Prisma } from '@prisma/client';
 import { StandardResponse } from '../../common/types/standardResponse';
+import { Vote } from '../../common/types/vote.enum';
 import { createSlug } from '../../common/utils';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePostDto, UpdatePostDto } from './dto';
@@ -35,7 +36,11 @@ export class PostRepository {
       countPosts,
     ]);
 
-    return { success: true, data: posts, count: totalPosts };
+    return {
+      success: true,
+      data: posts,
+      count: totalPosts,
+    };
   }
 
   async findOne(
@@ -73,7 +78,7 @@ export class PostRepository {
             createdAt: true,
           },
         },
-        // TODO: add other related fields e.g votes and comments
+        // TODO: add other related fields e.g comments
       },
       data: {
         userId,
@@ -205,5 +210,145 @@ export class PostRepository {
     }
 
     return post;
+  }
+
+  async upvote(
+    postId: string,
+    userId: string,
+  ): Promise<StandardResponse<Post>> {
+    // Get user vote from db
+    const userVote = await this.hasVoted({
+      postId,
+      userId,
+    });
+
+    /**
+     * Code Description:
+     *
+     * If user has not upvoted the post yet, create one in PostVote and increment upvotes in Post.
+     * But if user has upvoted the post before, delete the user PostVote and check it's score.
+     * If user score was true (upvote) just decrement upvotes in PostVote.
+     * And if user score was false (downvote) create new PostVote and increment upvotes in Post.
+     */
+
+    // // ** First approach (it's too complicated !)
+    // const createVote = this.prisma.postVote.create({
+    //   data: {
+    //     postId,
+    //     userId,
+    //     score: !!Vote.UPVOTE,
+    //   },
+    // });
+
+    // const postUpvoteIncrement = this.prisma.post.update({
+    //   where: {
+    //     id: postId,
+    //   },
+    //   data: {
+    //     upvotes: {
+    //       increment: 1,
+    //     },
+    //   },
+    // });
+
+    // const postUpvoteDecrement = this.prisma.post.update({
+    //   where: {
+    //     id: postId,
+    //   },
+    //   data: {
+    //     upvotes: {
+    //       decrement: 1,
+    //     },
+    //   },
+    // });
+
+    // if (!userVote) {
+    //   const [vote, post] = await this.prisma.$transaction([
+    //     createVote,
+    //     postUpvoteIncrement,
+    //   ]);
+
+    //   return { success: true, data: post };
+    // }
+
+    // const deletedVote = await this.prisma.postVote.delete({
+    //   where: {
+    //     id: userVote.id,
+    //   },
+    // });
+
+    // if (!userVote.score) {
+    //   const [vote, post] = await this.prisma.$transaction([
+    //     createVote,
+    //     postUpvoteIncrement,
+    //   ]);
+
+    //   return { success: true, data: post };
+    // }
+
+    // const [post] = await this.prisma.$transaction([postUpvoteDecrement]);
+
+    // return { success: true, data: post };
+
+    // ** Second approach
+    const upvotePost = await this.prisma.post.update({
+      where: {
+        id: postId,
+      },
+      data: {
+        postVotes: userVote
+          ? !userVote.score
+            ? {
+                delete: {
+                  id: userVote.id,
+                },
+                create: [
+                  {
+                    score: !!Vote.UPVOTE,
+                    userId,
+                  },
+                ],
+              }
+            : {
+                delete: {
+                  id: userVote.id,
+                },
+              }
+          : {
+              create: [
+                {
+                  score: !!Vote.UPVOTE,
+                  userId,
+                },
+              ],
+            },
+        upvotes: userVote
+          ? userVote.score
+            ? {
+                decrement: 1,
+              }
+            : {
+                increment: 1,
+              }
+          : {
+              increment: 1,
+            },
+      },
+    });
+
+    return { success: true, data: upvotePost };
+  }
+
+  /**
+   * Find the user vote from PostVote table and returns it.
+   * @param {Prisma.PostVoteWhereInput} Arguments to find user's PostVote.
+   * @return {Promise<PostVote>} Returns user's PostVote.
+   */
+  async hasVoted(where: Prisma.PostVoteWhereInput): Promise<PostVote> {
+    const userVote = await this.prisma.postVote.findFirst({
+      where,
+    });
+
+    return userVote;
   }
 }

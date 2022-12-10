@@ -173,6 +173,25 @@ export class PostController {
     );
   }
 
+  @Post('comments/:id/upvote')
+  @ApiOkResponse({
+    schema: createSchema(SinglePostExample),
+  })
+  @ApiNotFoundResponse({
+    description: 'Post with id {id} was not found',
+  })
+  @ApiBadRequestResponse({
+    description: 'User is already joined the subreddit with id {id}',
+  })
+  @ApiOperation({ summary: 'Upvote post' })
+  upvotePostById(
+    @Param('subredditName') subredditName: string,
+    @Param('id') postId: string,
+    @GetUser('id') userId: string,
+  ): Promise<StandardResponse<Prisma.Post>> {
+    return this.postService.upvotePostById(subredditName, postId, userId);
+  }
+
   @HttpCode(HttpStatus.NO_CONTENT)
   @Delete('post/:id')
   @ApiNoContentResponse({ description: 'No Content' })
@@ -180,10 +199,10 @@ export class PostController {
     description: 'User is not post submitter',
   })
   @ApiNotFoundResponse({
-    description: 'Subreddit with id {id} was not found',
+    description: 'Post with id {id} was not found',
   })
   @ApiBadGatewayResponse({
-    description: 'Failed to delete subreddit with id {id}',
+    description: 'Failed to delete post with id {id}',
   })
   @ApiOperation({ summary: 'Delete post by id' })
   deletePostById(
