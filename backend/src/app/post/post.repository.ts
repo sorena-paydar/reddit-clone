@@ -228,7 +228,7 @@ export class PostRepository {
      * If user has not upvoted the post yet, create one in PostVote and increment upvotes in Post.
      * But if user has upvoted the post before, delete the user PostVote and check it's score.
      * If user score was true (upvote) just decrement upvotes in PostVote.
-     * And if user score was false (downvote) create new PostVote and increment upvotes in Post.
+     * And if user score was false (downvote) create new PostVote, increment upvotes and decrement downvotes by 1 in Post.
      */
 
     // // ** First approach (it's too complicated !)
@@ -262,6 +262,13 @@ export class PostRepository {
     //   },
     // });
 
+    // const postDownvoteDecrement = this.prisma.post.update({
+    //   where: { id: postId },
+    //   data: {
+    //     downvotes: { decrement: 1 },
+    //   },
+    // });
+
     // if (!userVote) {
     //   const [vote, post] = await this.prisma.$transaction([
     //     createVote,
@@ -278,9 +285,10 @@ export class PostRepository {
     // });
 
     // if (!userVote.score) {
-    //   const [vote, post] = await this.prisma.$transaction([
+    //   const [vote, , post] = await this.prisma.$transaction([
     //     createVote,
     //     postUpvoteIncrement,
+    //     postDownvoteDecrement,
     //   ]);
 
     //   return { success: true, data: post };
@@ -297,8 +305,13 @@ export class PostRepository {
       },
       data: {
         postVotes: userVote
-          ? !userVote.score
+          ? userVote.score
             ? {
+                delete: {
+                  id: userVote.id,
+                },
+              }
+            : {
                 delete: {
                   id: userVote.id,
                 },
@@ -309,11 +322,6 @@ export class PostRepository {
                   },
                 ],
               }
-            : {
-                delete: {
-                  id: userVote.id,
-                },
-              }
           : {
               create: [
                 {
@@ -322,21 +330,74 @@ export class PostRepository {
                 },
               ],
             },
-        upvotes: userVote
-          ? userVote.score
-            ? {
-                decrement: 1,
-              }
-            : {
-                increment: 1,
-              }
-          : {
-              increment: 1,
-            },
+
+        upvotes: { increment: userVote?.score ? -1 : 1 },
+
+        downvotes: { increment: userVote && !userVote.score ? -1 : 0 },
       },
     });
 
     return { success: true, data: upvotePost };
+  }
+
+  async downvote(
+    postId: string,
+    userId: string,
+  ): Promise<StandardResponse<Post>> {
+    // Get user vote from db
+    const userVote = await this.hasVoted({
+      postId,
+      userId,
+    });
+
+    /**
+     * Code Description:
+     *
+     * If user has not downvoted the post yet, create one in PostVote and increment downvotes in Post.
+     * But if user has downvoted the post before, delete the user PostVote and check it's score.
+     * If user score was false (downvote) just decrement downvotes in PostVote.
+     * And if user score was true (upvote) create new PostVote, increment downvotes and decrement upvotes by 1 in Post.
+     */
+
+    const downvotePost = await this.prisma.post.update({
+      where: {
+        id: postId,
+      },
+      data: {
+        postVotes: userVote
+          ? !userVote.score
+            ? {
+                delete: {
+                  id: userVote.id,
+                },
+              }
+            : {
+                delete: {
+                  id: userVote.id,
+                },
+                create: [
+                  {
+                    score: !!Vote.DOWNVOTE,
+                    userId,
+                  },
+                ],
+              }
+          : {
+              create: [
+                {
+                  score: !!Vote.DOWNVOTE,
+                  userId,
+                },
+              ],
+            },
+
+        downvotes: { increment: userVote && !userVote.score ? -1 : 1 },
+
+        upvotes: { increment: userVote?.score ? -1 : 0 },
+      },
+    });
+
+    return { success: true, data: downvotePost };
   }
 
   /**

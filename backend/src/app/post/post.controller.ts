@@ -180,9 +180,6 @@ export class PostController {
   @ApiNotFoundResponse({
     description: 'Post with id {id} was not found',
   })
-  @ApiBadRequestResponse({
-    description: 'User is already joined the subreddit with id {id}',
-  })
   @ApiOperation({ summary: 'Upvote post' })
   upvotePostById(
     @Param('subredditName') subredditName: string,
@@ -190,6 +187,22 @@ export class PostController {
     @GetUser('id') userId: string,
   ): Promise<StandardResponse<Prisma.Post>> {
     return this.postService.upvotePostById(subredditName, postId, userId);
+  }
+
+  @Post('comments/:id/downvote')
+  @ApiOkResponse({
+    schema: createSchema(SinglePostExample),
+  })
+  @ApiNotFoundResponse({
+    description: 'Post with id {id} was not found',
+  })
+  @ApiOperation({ summary: 'Downvote post' })
+  downvotePostById(
+    @Param('subredditName') subredditName: string,
+    @Param('id') postId: string,
+    @GetUser('id') userId: string,
+  ): Promise<StandardResponse<Prisma.Post>> {
+    return this.postService.downvotePostById(subredditName, postId, userId);
   }
 
   @HttpCode(HttpStatus.NO_CONTENT)

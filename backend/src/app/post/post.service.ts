@@ -109,6 +109,20 @@ export class PostService {
     return this.postRepository.upvote(postId, userId);
   }
 
+  async downvotePostById(
+    subredditName: string,
+    postId: string,
+    userId: string,
+  ): Promise<StandardResponse<Post>> {
+    await this.subredditRepository.exists({
+      name: subredditName,
+    });
+
+    await this.postRepository.exists({ id: postId });
+
+    return this.postRepository.downvote(postId, userId);
+  }
+
   async deletePostById(
     postId: string,
     userId: string,
