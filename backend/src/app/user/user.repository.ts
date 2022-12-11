@@ -1,5 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { User } from '@prisma/client';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { Prisma, User } from '@prisma/client';
 import { StandardResponse } from '../../common/types/standardResponse';
 import { PrismaService } from '../prisma/prisma.service';
 import * as argon from 'argon2';
@@ -41,5 +45,23 @@ export class UserRepository {
     delete userFromDb.password;
 
     return { success: true, data: userFromDb };
+  }
+
+  /**
+   * Checks whether user with given arguments exists or not.
+   * @param {Prisma.UserWhereUniqueInput}  Arguments to find a User
+   * @return {Promise<User>} return user if it exists
+   */
+  async exists(where: Prisma.UserWhereUniqueInput): Promise<User> {
+    const user = await this.prisma.user.findUnique({
+      where,
+    });
+
+    // check if post exists
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
   }
 }

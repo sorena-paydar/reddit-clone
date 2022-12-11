@@ -1,6 +1,5 @@
 import {
   Injectable,
-  NotFoundException,
   BadGatewayException,
   BadRequestException,
   ConflictException,
@@ -24,14 +23,9 @@ export class SubredditService {
   }
 
   async getUserSubreddits(
-    username: string,
-    user: User,
+    userId: string,
   ): Promise<StandardResponse<Subreddit[]>> {
-    if (username !== user.username) {
-      throw new NotFoundException();
-    }
-
-    return this.subredditRepository.findAllByUserId(user.id);
+    return this.subredditRepository.findAllByUserId(userId);
   }
 
   async getSubredditByName(
@@ -150,13 +144,8 @@ export class SubredditService {
   }
 
   async getUserJoinedSubreddits(
-    username: string,
     user: User,
   ): Promise<StandardResponse<Subreddit[]>> {
-    if (username !== user.username) {
-      throw new NotFoundException();
-    }
-
     return this.subredditRepository.joinedSubreddits(user.id);
   }
 

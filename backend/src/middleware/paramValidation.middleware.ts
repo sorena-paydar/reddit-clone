@@ -18,7 +18,7 @@ export class ParamValidationInterceptor implements NestInterceptor {
     };
 
     // Check username in request param
-    checkUserParam(req.params, req.user);
+    if (req.user) checkUserParam(req.params, req.user);
 
     return next.handle();
   }

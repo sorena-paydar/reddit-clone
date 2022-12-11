@@ -120,4 +120,15 @@ describe('/user', () => {
     expect(response.body.success).toEqual(true);
     expect(response.body.data.avatar).toEqual(null);
   });
+
+  it('/user/{username}/submitted GET', async () => {
+    const response = await request(app.getHttpServer())
+      .get(`/user/${authDto.username}/submitted`)
+      .set({ Authorization: 'Bearer ' + access_token })
+      .expect(HttpStatus.OK);
+
+    expect(response.body.success).toEqual(true);
+    expect(response.body.data).toEqual([]);
+    expect(response.body.count).toEqual(0);
+  });
 });

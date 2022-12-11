@@ -12,7 +12,7 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { Subreddit, User } from '@prisma/client';
+import Prisma, { Subreddit, User } from '@prisma/client';
 import { Image, StandardResponse } from '../../common/types/standardResponse';
 import { Auth, GetUser } from '../auth/decorator';
 import { SubredditService } from '../subreddit/subreddit.service';
@@ -39,6 +39,9 @@ import {
 import { diskStorage } from 'multer';
 import { getDate, randomString, createSchema } from '../../common/utils';
 import * as path from 'path';
+import { PostService } from '../post/post.service';
+import { Public } from '../../common/decorators';
+import { AllUserPostsExample } from '../post/examples';
 
 @Auth()
 @ApiTags('User')
@@ -48,6 +51,7 @@ export class UserController {
   constructor(
     private userService: UserService,
     private subredditService: SubredditService,
+    private postService: PostService,
   ) {}
 
   @Get(':username')
@@ -94,9 +98,9 @@ export class UserController {
   @ApiOperation({ summary: 'Get user owned subreddits' })
   subreddits(
     @Param('username') username: string,
-    @GetUser() user: User,
+    @GetUser('id') userId: string,
   ): Promise<StandardResponse<Subreddit[]>> {
-    return this.subredditService.getUserSubreddits(username, user);
+    return this.subredditService.getUserSubreddits(userId);
   }
 
   @Get(':username/joined-subreddits')
@@ -112,7 +116,7 @@ export class UserController {
     @Param('username') username: string,
     @GetUser() user: User,
   ): Promise<StandardResponse<Subreddit[]>> {
-    return this.subredditService.getUserJoinedSubreddits(username, user);
+    return this.subredditService.getUserJoinedSubreddits(user);
   }
 
   @Post(':username/upload-avatar')
@@ -199,5 +203,20 @@ export class UserController {
     @Param('username') username: string,
   ): Promise<StandardResponse<User>> {
     return this.userService.update(username, { avatar: null });
+  }
+
+  @Get(':username/submitted')
+  @Public()
+  @ApiOkResponse({
+    schema: createSchema(AllUserPostsExample),
+  })
+  @ApiNotFoundResponse({
+    description: '{username} was not found',
+  })
+  @ApiOperation({ summary: 'User submitted post' })
+  submittedPost(
+    @Param('username') username: string,
+  ): Promise<StandardResponse<Prisma.Post[]>> {
+    return this.postService.submittedPost(username);
   }
 }

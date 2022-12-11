@@ -152,6 +152,8 @@ describe('/r/{subredditName}', () => {
     expect(response.body.success).toEqual(true);
     expect(response.body.data.upvotes).toEqual(post.upvotes + 1);
     expect(response.body.data.downvotes).toEqual(post.downvotes);
+
+    post = response.body.data;
   });
 
   it('/r/{subredditName}/comments/{id}/downvote', async () => {
@@ -161,7 +163,7 @@ describe('/r/{subredditName}', () => {
       .expect(HttpStatus.OK);
 
     expect(response.body.success).toEqual(true);
-    expect(response.body.data.upvotes).toEqual(post.upvotes);
+    expect(response.body.data.upvotes).toEqual(post.upvotes - 1);
     expect(response.body.data.downvotes).toEqual(post.downvotes + 1);
   });
 

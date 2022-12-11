@@ -300,6 +300,14 @@ export class PostRepository {
 
     // ** Second approach
     const upvotePost = await this.prisma.post.update({
+      include: {
+        medias: {
+          select: {
+            mediaUrl: true,
+            createdAt: true,
+          },
+        },
+      },
       where: {
         id: postId,
       },
@@ -360,6 +368,14 @@ export class PostRepository {
      */
 
     const downvotePost = await this.prisma.post.update({
+      include: {
+        medias: {
+          select: {
+            mediaUrl: true,
+            createdAt: true,
+          },
+        },
+      },
       where: {
         id: postId,
       },
@@ -411,5 +427,43 @@ export class PostRepository {
     });
 
     return userVote;
+  }
+
+  async submitted(username: string): Promise<StandardResponse<Post[]>> {
+    const findUserSubmittedPost = this.prisma.post.findMany({
+      include: {
+        medias: {
+          select: {
+            mediaUrl: true,
+            createdAt: true,
+          },
+        },
+      },
+      where: {
+        user: {
+          username,
+        },
+      },
+    });
+
+    const countUserSubmittedPost = this.prisma.post.count({
+      where: {
+        user: {
+          username,
+        },
+      },
+    });
+
+    const [userSubmittedPosts, totalSubmittedPosts] =
+      await this.prisma.$transaction([
+        findUserSubmittedPost,
+        countUserSubmittedPost,
+      ]);
+
+    return {
+      success: true,
+      data: userSubmittedPosts,
+      count: totalSubmittedPosts,
+    };
   }
 }

@@ -7,6 +7,7 @@ import {
 import { Post } from '@prisma/client';
 import { StandardResponse } from '../../common/types/standardResponse';
 import { SubredditRepository } from '../subreddit/subreddit.repository';
+import { UserRepository } from '../user/user.repository';
 import { CreatePostDto, UpdatePostDto } from './dto';
 import { PostRepository } from './post.repository';
 
@@ -15,6 +16,7 @@ export class PostService {
   constructor(
     private postRepository: PostRepository,
     private subredditRepository: SubredditRepository,
+    private userRepository: UserRepository,
   ) {}
 
   async getAllPosts(subredditName: string): Promise<StandardResponse<Post[]>> {
@@ -136,5 +138,12 @@ export class PostService {
     if (data) return data;
 
     throw new BadGatewayException(`Failed to delete post with id ${postId}`);
+  }
+
+  async submittedPost(username: string): Promise<StandardResponse<Post[]>> {
+    // Check if user with given username exists
+    await this.userRepository.exists({ username });
+
+    return await this.postRepository.submitted(username);
   }
 }
