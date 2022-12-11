@@ -87,9 +87,9 @@ export class PostRepository {
         slug,
 
         // Create media
-        medias: {
+        medias: medias && {
           createMany: {
-            data: medias?.map((media) => ({
+            data: medias.map((media) => ({
               mediaUrl: `posts/${media.filename}`,
             })),
           },
@@ -139,7 +139,7 @@ export class PostRepository {
         ...(newSlug && { slug: newSlug }),
 
         // Update media
-        medias: {
+        medias: medias && {
           // Delete Previous post media
           deleteMany: {
             postId: postFromDb.id,

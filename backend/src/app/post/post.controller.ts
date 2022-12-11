@@ -173,6 +173,7 @@ export class PostController {
     );
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('comments/:id/upvote')
   @ApiOkResponse({
     schema: createSchema(SinglePostExample),
@@ -189,6 +190,7 @@ export class PostController {
     return this.postService.upvotePostById(subredditName, postId, userId);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('comments/:id/downvote')
   @ApiOkResponse({
     schema: createSchema(SinglePostExample),

@@ -245,6 +245,7 @@ export class SubredditController {
     return this.subredditService.getSubredditMembers(subredditId);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post(':id/join')
   @ApiOkResponse({
     schema: createSchema(SingleSubredditExample),
