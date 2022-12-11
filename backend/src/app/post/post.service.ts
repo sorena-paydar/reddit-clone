@@ -140,10 +140,24 @@ export class PostService {
     throw new BadGatewayException(`Failed to delete post with id ${postId}`);
   }
 
-  async submittedPost(username: string): Promise<StandardResponse<Post[]>> {
+  async submittedPosts(username: string): Promise<StandardResponse<Post[]>> {
     // Check if user with given username exists
     await this.userRepository.exists({ username });
 
     return await this.postRepository.submitted(username);
+  }
+
+  async upvotedPosts(username: string): Promise<StandardResponse<Post[]>> {
+    // Check if user with given username exists
+    await this.userRepository.exists({ username });
+
+    return await this.postRepository.upvoted(username);
+  }
+
+  async downvotedPosts(username: string): Promise<StandardResponse<Post[]>> {
+    // Check if user with given username exists
+    await this.userRepository.exists({ username });
+
+    return await this.postRepository.downvoted(username);
   }
 }

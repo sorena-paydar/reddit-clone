@@ -41,7 +41,7 @@ import { getDate, randomString, createSchema } from '../../common/utils';
 import * as path from 'path';
 import { PostService } from '../post/post.service';
 import { Public } from '../../common/decorators';
-import { AllUserPostsExample } from '../post/examples';
+import { AllPostsExample, AllUserPostsExample } from '../post/examples';
 
 @Auth()
 @ApiTags('User')
@@ -213,10 +213,38 @@ export class UserController {
   @ApiNotFoundResponse({
     description: '{username} was not found',
   })
-  @ApiOperation({ summary: 'User submitted post' })
-  submittedPost(
+  @ApiOperation({ summary: 'User submitted posts' })
+  submittedPosts(
     @Param('username') username: string,
   ): Promise<StandardResponse<Prisma.Post[]>> {
-    return this.postService.submittedPost(username);
+    return this.postService.submittedPosts(username);
+  }
+
+  @Get(':username/upvoted')
+  @ApiOkResponse({
+    schema: createSchema(AllPostsExample),
+  })
+  @ApiNotFoundResponse({
+    description: '{username} was not found',
+  })
+  @ApiOperation({ summary: 'User upvoted posts' })
+  upvotedPosts(
+    @Param('username') username: string,
+  ): Promise<StandardResponse<Prisma.Post[]>> {
+    return this.postService.upvotedPosts(username);
+  }
+
+  @Get(':username/downvoted')
+  @ApiOkResponse({
+    schema: createSchema(AllPostsExample),
+  })
+  @ApiNotFoundResponse({
+    description: '{username} was not found',
+  })
+  @ApiOperation({ summary: 'User downvoted posts' })
+  downvotedPosts(
+    @Param('username') username: string,
+  ): Promise<StandardResponse<Prisma.Post[]>> {
+    return this.postService.downvotedPosts(username);
   }
 }

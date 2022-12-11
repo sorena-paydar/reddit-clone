@@ -430,7 +430,7 @@ export class PostRepository {
   }
 
   async submitted(username: string): Promise<StandardResponse<Post[]>> {
-    const findUserSubmittedPost = this.prisma.post.findMany({
+    const findUserSubmittedPosts = this.prisma.post.findMany({
       include: {
         medias: {
           select: {
@@ -446,7 +446,7 @@ export class PostRepository {
       },
     });
 
-    const countUserSubmittedPost = this.prisma.post.count({
+    const countUserSubmittedPosts = this.prisma.post.count({
       where: {
         user: {
           username,
@@ -456,14 +456,110 @@ export class PostRepository {
 
     const [userSubmittedPosts, totalSubmittedPosts] =
       await this.prisma.$transaction([
-        findUserSubmittedPost,
-        countUserSubmittedPost,
+        findUserSubmittedPosts,
+        countUserSubmittedPosts,
       ]);
 
     return {
       success: true,
       data: userSubmittedPosts,
       count: totalSubmittedPosts,
+    };
+  }
+
+  async upvoted(username: string): Promise<StandardResponse<Post[]>> {
+    const findUserUpvotedPosts = this.prisma.post.findMany({
+      include: {
+        medias: {
+          select: {
+            mediaUrl: true,
+            createdAt: true,
+          },
+        },
+      },
+      where: {
+        postVotes: {
+          some: {
+            user: {
+              username,
+            },
+            score: !!Vote.UPVOTE,
+          },
+        },
+      },
+    });
+
+    const countUserUpvotedPosts = this.prisma.post.count({
+      where: {
+        postVotes: {
+          some: {
+            user: {
+              username,
+            },
+            score: !!Vote.UPVOTE,
+          },
+        },
+      },
+    });
+
+    const [userUpvotedPosts, totalUpvotedPosts] =
+      await this.prisma.$transaction([
+        findUserUpvotedPosts,
+        countUserUpvotedPosts,
+      ]);
+
+    return {
+      success: true,
+      data: userUpvotedPosts,
+      count: totalUpvotedPosts,
+    };
+  }
+
+  async downvoted(username: string): Promise<StandardResponse<Post[]>> {
+    const findUserDownvotedPosts = this.prisma.post.findMany({
+      include: {
+        medias: {
+          select: {
+            mediaUrl: true,
+            createdAt: true,
+          },
+        },
+      },
+      where: {
+        postVotes: {
+          some: {
+            user: {
+              username,
+            },
+            score: !!Vote.DOWNVOTE,
+          },
+        },
+      },
+    });
+
+    const countUserDownvotedPosts = this.prisma.post.count({
+      where: {
+        postVotes: {
+          some: {
+            user: {
+              username,
+            },
+            score: !!Vote.DOWNVOTE,
+          },
+        },
+      },
+    });
+
+    const [userDownvotedPosts, totalDownvotedPosts] =
+      await this.prisma.$transaction([
+        findUserDownvotedPosts,
+        countUserDownvotedPosts,
+      ]);
+
+    return {
+      success: true,
+      data: userDownvotedPosts,
+      count: totalDownvotedPosts,
     };
   }
 }
