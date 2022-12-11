@@ -178,7 +178,7 @@ export class PostController {
     schema: createSchema(SinglePostExample),
   })
   @ApiNotFoundResponse({
-    description: 'Post with id {id} was not found',
+    description: 'Post not found',
   })
   @ApiOperation({ summary: 'Upvote post' })
   upvotePostById(
@@ -194,7 +194,7 @@ export class PostController {
     schema: createSchema(SinglePostExample),
   })
   @ApiNotFoundResponse({
-    description: 'Post with id {id} was not found',
+    description: 'Post not found',
   })
   @ApiOperation({ summary: 'Downvote post' })
   downvotePostById(
