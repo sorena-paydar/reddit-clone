@@ -143,6 +143,28 @@ describe('/r/{subredditName}', () => {
     post = response.body.data;
   });
 
+  it('/r/{subredditName}/comments/{id}/upvote', async () => {
+    const response = await request(app.getHttpServer())
+      .post(`/r/${mockSubreddit.name}/comments/${post.id}/upvote`)
+      .set({ Authorization: 'Bearer ' + access_token })
+      .expect(HttpStatus.OK);
+
+    expect(response.body.success).toEqual(true);
+    expect(response.body.data.upvotes).toEqual(post.upvotes + 1);
+    expect(response.body.data.downvotes).toEqual(post.downvotes);
+  });
+
+  it('/r/{subredditName}/comments/{id}/downvote', async () => {
+    const response = await request(app.getHttpServer())
+      .post(`/r/${mockSubreddit.name}/comments/${post.id}/downvote`)
+      .set({ Authorization: 'Bearer ' + access_token })
+      .expect(HttpStatus.OK);
+
+    expect(response.body.success).toEqual(true);
+    expect(response.body.data.upvotes).toEqual(post.upvotes);
+    expect(response.body.data.downvotes).toEqual(post.downvotes + 1);
+  });
+
   it('/r/{subredditName}/post/{id} DELETE', async () => {
     await request(app.getHttpServer())
       .delete(`/r/${mockSubreddit.name}/post/${post.id}`)
