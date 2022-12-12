@@ -29,7 +29,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "pretest:e2e": "npm run db:test:restart",
-    "test:e2e": "dotenv -e .env.test -- jest --watch --no-cache --config ./test/jest-e2e.json"
+    "test:e2e": "dotenv -e .env.test -- jest --watchAll --no-cache --config ./test/jest-e2e.json"
   },
   "dependencies": {
     "@nestjs/common": "^9.0.0",
@@ -68,7 +68,6 @@
     "eslint": "^8.0.1",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
-    "jest": "28.1.3",
     "prettier": "^2.3.2",
     "prisma": "^4.6.1",
     "source-map-support": "^0.5.20",

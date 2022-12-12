@@ -143,6 +143,16 @@ describe('/r/{subredditName}', () => {
     post = response.body.data;
   });
 
+  it('/user/{username}/submitted GET', async () => {
+    const response = await request(app.getHttpServer())
+      .get(`/user/${mockUser.username}/submitted`)
+      .expect(HttpStatus.OK);
+
+    expect(response.body.success).toEqual(true);
+    expect(response.body.data).toEqual([post]);
+    expect(response.body.count).toEqual(1);
+  });
+
   it('/r/{subredditName}/comments/{id}/upvote', async () => {
     const response = await request(app.getHttpServer())
       .post(`/r/${mockSubreddit.name}/comments/${post.id}/upvote`)
@@ -156,6 +166,17 @@ describe('/r/{subredditName}', () => {
     post = response.body.data;
   });
 
+  it('/user/{username}/upvoted GET', async () => {
+    const response = await request(app.getHttpServer())
+      .get(`/user/${mockUser.username}/upvoted`)
+      .set({ Authorization: 'Bearer ' + access_token })
+      .expect(HttpStatus.OK);
+
+    expect(response.body.success).toEqual(true);
+    expect(response.body.data).toEqual([post]);
+    expect(response.body.count).toEqual(1);
+  });
+
   it('/r/{subredditName}/comments/{id}/downvote', async () => {
     const response = await request(app.getHttpServer())
       .post(`/r/${mockSubreddit.name}/comments/${post.id}/downvote`)
@@ -165,6 +186,19 @@ describe('/r/{subredditName}', () => {
     expect(response.body.success).toEqual(true);
     expect(response.body.data.upvotes).toEqual(post.upvotes - 1);
     expect(response.body.data.downvotes).toEqual(post.downvotes + 1);
+
+    post = response.body.data;
+  });
+
+  it('/user/{username}/downvoted GET', async () => {
+    const response = await request(app.getHttpServer())
+      .get(`/user/${mockUser.username}/downvoted`)
+      .set({ Authorization: 'Bearer ' + access_token })
+      .expect(HttpStatus.OK);
+
+    expect(response.body.success).toEqual(true);
+    expect(response.body.data).toEqual([post]);
+    expect(response.body.count).toEqual(1);
   });
 
   it('/r/{subredditName}/post/{id} DELETE', async () => {
