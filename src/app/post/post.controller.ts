@@ -95,7 +95,7 @@ export class PostController {
     summary: 'Create a new post',
   })
   @UseInterceptors(
-    UploadMultiFileInterceptor('medias', 10, (ctx) => {
+    UploadMultiFileInterceptor('medias', 10, () => {
       // Return the options
       return {
         storage: diskStorage({
@@ -142,7 +142,7 @@ export class PostController {
     summary: 'Update post by slug',
   })
   @UseInterceptors(
-    UploadMultiFileInterceptor('medias', 10, (ctx) => {
+    UploadMultiFileInterceptor('medias', 10, () => {
       // Return the options
       return {
         storage: diskStorage({

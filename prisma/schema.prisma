@@ -33,7 +33,7 @@ model User {
   subreddits    Subreddit[]
   members       Member[]
   posts         Post[]
-  postVote      PostVote[]
+  postVotes     PostVote[]
 
   @@map("users")
 }
