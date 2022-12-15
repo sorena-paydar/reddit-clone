@@ -9,6 +9,14 @@ A Nest.js API for Reddit Clone.
 $ npm install
 ```
 
+## Environment variables
+```bash
+# Create .env and .env.test files according to .env.example
+$ cp .env.example .env
+$ cp .env.example .env.test
+```
+> `.env.test` is used for e2e tests.
+
 ## Database
 ```bash
 # Create and run database
