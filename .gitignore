@@ -37,6 +37,4 @@ lerna-debug.log*
 .env
 .env.test
 
-docker-compose.yml
-
 /media

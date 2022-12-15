@@ -9,12 +9,12 @@
     "prisma:dev:generate": "npx prisma generate",
     "prisma:dev:deploy": "npx prisma migrate deploy",
     "db:dev:rm": "docker compose rm dev-db -s -f -v",
-    "db:dev:up": "docker compose up dev-db -d",
+    "db:dev:up": "docker compose --env-file ./.env up dev-db -d",
     "db:dev:restart": "npm run db:dev:rm && npm run db:dev:up && sleep 1 && npm run prisma:dev:deploy",
     "prisma:test:generate": "dotenv -e .env.test -- npx prisma generate",
     "prisma:test:deploy": "dotenv -e .env.test -- npx prisma migrate deploy",
     "db:test:rm": "docker compose rm test-db -s -f -v",
-    "db:test:up": "docker compose up test-db -d",
+    "db:test:up": "docker compose --env-file ./.env.test up test-db -d",
     "db:test:restart": "npm run db:test:rm && npm run db:test:up && sleep 1 && npm run prisma:test:deploy",
     "prebuild": "rimraf dist",
     "build": "nest build",
@@ -29,7 +29,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "pretest:e2e": "npm run db:test:restart",
-    "test:e2e": "dotenv -e .env.test -- jest --watchAll --no-cache --config ./test/jest-e2e.json"
+    "test:e2e": "dotenv -e .env.test -- jest --no-cache --config ./test/jest-e2e.json"
   },
   "dependencies": {
     "@nestjs/common": "^9.0.0",
@@ -44,6 +44,7 @@
     "argon2": "^0.30.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.13.2",
+    "dotenv": "^16.0.3",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.0",
     "reflect-metadata": "^0.1.13",
